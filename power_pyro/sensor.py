@@ -1,7 +1,11 @@
 import clr
 import time
 import threading
+from elevate import elevate
 
+elevate()
+
+#clr.AddReference(r"C:\Users\Alexa\OneDrive\Área de Trabalho\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
 clr.AddReference(r"C:\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
 from LibreHardwareMonitor.Hardware import Computer, HardwareType, SensorType
 
@@ -34,11 +38,11 @@ class Monitor:
 
             # Seria interval + 0.2s?
             if self.computer.IsCpuEnabled:     
-                self.total_energy_cpu += (self.get_cpu_power().Value * (interval / 3600))/1000  # kWh
+                self.total_energy_cpu += (self.get_cpu_power().Value * interval)/360000  # kWh
             if self.computer.IsGpuEnabled:     
-                self.total_energy_gpu += (self.get_gpu_power().Value * (interval / 3600))/1000  # kWh
+                self.total_energy_gpu += (self.get_gpu_power().Value * interval )/360000  # kWh
             if self.computer.IsMemoryEnabled:     
-                self.total_energy_memory += (self.get_memory_power().Value * 0.375 * (interval / 3600))/1000 #kWh
+                self.total_energy_memory += (self.get_memory_power().Value * 0.375 * interval )/360000 #kWh
 
             self.initial_time = period_time
         
@@ -76,6 +80,19 @@ class Monitor:
                 return {'cpu': self.total_energy_cpu}
         else:
             return {}
+        
+    def get_total_energy_consumed(self):
+        total_energy = 0.0
+
+        if self.computer.IsCpuEnabled:
+            total_energy += self.total_energy_cpu
+        if self.computer.IsGpuEnabled:
+            total_energy += self.total_energy_gpu
+        if self.computer.IsMemoryEnabled:
+            total_energy += self.total_energy_memory
+
+        return {'total': total_energy}
+
     
     def start(self):
         self.thread.start()
