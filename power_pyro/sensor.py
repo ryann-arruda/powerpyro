@@ -1,30 +1,41 @@
 import clr
 import time
+import os
 import threading
 from elevate import elevate
 
-elevate()
 
-#clr.AddReference(r"C:\Users\Alexa\OneDrive\Área de Trabalho\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
-clr.AddReference(r"C:\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
-from LibreHardwareMonitor.Hardware import Computer, HardwareType, SensorType
+if os.name == 'nt':
+    elevate()
+
+    #clr.AddReference(r"C:\Users\Alexa\OneDrive\Área de Trabalho\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
+    clr.AddReference(r"C:\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
+    from LibreHardwareMonitor.Hardware import Computer, HardwareType, SensorType
 
 class Monitor:
     def __init__(self, cpu=True, gpu=True, memory=True):
         self.sign = False
         self.initial_time = 0.0
-        self.thread = threading.Thread(target=self.monitor)
+
+        if os.name == 'nt':
+            self.thread = threading.Thread(target=self.windows_monitor)
+            
+            self.computer = Computer()
+
+            self.computer.IsCpuEnabled = cpu  
+            self.computer.IsGpuEnabled = gpu  
+            self.computer.IsMemoryEnabled = memory 
+        elif os.name == 'posix':
+            self.thread = threading.Thread(target=self.linux_monitor)
+        else:
+            raise ValueError("Unable to identify operating system")
+
         self.total_energy_cpu = 0.0
         self.total_energy_gpu = 0.0
         self.total_energy_memory = 0.0
-
-        self.computer = Computer()
-
-        self.computer.IsCpuEnabled = cpu  
-        self.computer.IsGpuEnabled = gpu  
-        self.computer.IsMemoryEnabled = memory 
+        self.total_energy = 0.0
     
-    def monitor(self):
+    def windows_monitor(self):
         self.computer.Open()
 
         while not self.sign:
@@ -47,6 +58,9 @@ class Monitor:
             self.initial_time = period_time
         
         self.computer.Close()
+
+    def linux_monitor(self):
+        pass
     
     def get_cpu_power(self):
         cpu = next((hardware for hardware in self.computer.Hardware if hardware.HardwareType == HardwareType.Cpu), None)
@@ -70,29 +84,29 @@ class Monitor:
         return next((sensor for sensor in memory.Sensors if sensor.SensorType == SensorType.Data and sensor.Name == "Memory Used"))
     
     def get_energy_consumed(self):
-        if self.computer.IsCpuEnabled:
-            if self.computer.IsGpuEnabled:
-                if self.computer.IsMemoryEnabled:
-                    return {'cpu': self.total_energy_cpu, 'gpu': self.total_energy_gpu, 'memory': self.total_energy_memory}
+        if os.name == 'nt':
+            if self.computer.IsCpuEnabled:
+                if self.computer.IsGpuEnabled:
+                    if self.computer.IsMemoryEnabled:
+                        return {'cpu': self.total_energy_cpu, 'gpu': self.total_energy_gpu, 'memory': self.total_energy_memory}
+                    else:
+                        return {'cpu': self.total_energy_cpu, 'gpu': self.total_energy_gpu}
                 else:
-                    return {'cpu': self.total_energy_cpu, 'gpu': self.total_energy_gpu}
+                    return {'cpu': self.total_energy_cpu}
             else:
-                return {'cpu': self.total_energy_cpu}
-        else:
-            return {}
+                return {}
         
     def get_total_energy_consumed(self):
-        total_energy = 0.0
+            
+        if os.name == 'nt':
+            if self.computer.IsCpuEnabled:
+                self.total_energy += self.total_energy_cpu
+            if self.computer.IsGpuEnabled:
+                self.total_energy += self.total_energy_gpu
+            if self.computer.IsMemoryEnabled:
+                self.total_energy += self.total_energy_memory
 
-        if self.computer.IsCpuEnabled:
-            total_energy += self.total_energy_cpu
-        if self.computer.IsGpuEnabled:
-            total_energy += self.total_energy_gpu
-        if self.computer.IsMemoryEnabled:
-            total_energy += self.total_energy_memory
-
-        return {'total': total_energy}
-
+        return {'total': self.total_energy}
     
     def start(self):
         self.thread.start()
