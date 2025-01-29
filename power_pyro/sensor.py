@@ -3,7 +3,8 @@ import time
 import os
 import threading
 from elevate import elevate
-
+import subprocess
+import psutil
 
 if os.name == 'nt':
     elevate()
@@ -16,17 +17,25 @@ class Monitor:
     def __init__(self, cpu=True, gpu=True, memory=True):
         self.sign = False
         self.initial_time = 0.0
+        self.cpu = cpu
+        self.gpu = gpu
+        self.memory = memory
 
         if os.name == 'nt':
             self.thread = threading.Thread(target=self.windows_monitor)
             
             self.computer = Computer()
 
-            self.computer.IsCpuEnabled = cpu  
-            self.computer.IsGpuEnabled = gpu  
-            self.computer.IsMemoryEnabled = memory 
+            self.computer.IsCpuEnabled = self.cpu  
+            self.computer.IsGpuEnabled = self.gpu  
+            self.computer.IsMemoryEnabled = self.memory 
         elif os.name == 'posix':
-            self.thread = threading.Thread(target=self.linux_monitor)
+            if self.check_cpu_type() == 'GenuineIntel':
+                self.thread = threading.Thread(target=self.linux_monitor_intel)
+            elif self.check_cpu_type() == 'AuthenticAMD':
+                self.thread = threading.Thread(target=self.linux_monitor_amd) # trocar 
+            else:
+                raise ValueError("Unable to identify CPU type")
         else:
             raise ValueError("Unable to identify operating system")
 
@@ -41,72 +50,144 @@ class Monitor:
         while not self.sign:
             self.initial_time = time.time() 
 
-            time.sleep(1)
+            time.sleep(10)
             
             period_time = time.time() 
 
             interval = period_time - self.initial_time
 
-            # Seria interval + 0.2s?
-            if self.computer.IsCpuEnabled:     
-                self.total_energy_cpu += (self.get_cpu_power().Value * interval)/360000  # kWh
-            if self.computer.IsGpuEnabled:     
-                self.total_energy_gpu += (self.get_gpu_power().Value * interval )/360000  # kWh
-            if self.computer.IsMemoryEnabled:     
-                self.total_energy_memory += (self.get_memory_power().Value * 0.375 * interval )/360000 #kWh
+            if self.cpu:     
+                self.total_energy_cpu += (self.get_cpu_power() * interval)/3600000  # kWh
+            if self.gpu:     
+                self.total_energy_gpu += (self.get_gpu_power() * interval )/3600000  # kWh
+            if self.memory:     
+                self.total_energy_memory += (self.get_memory_power() * interval )/3600000 #kWh
 
             self.initial_time = period_time
         
         self.computer.Close()
 
-    def linux_monitor(self):
+    def linux_monitor_intel(self):
+
+        while not self.sign:
+            self.initial_time = time.time() 
+
+            time.sleep(10)
+            
+            period_time = time.time() 
+
+            interval = period_time - self.initial_time
+
+            if self.cpu:     
+                self.total_energy_cpu += (self.get_cpu_power()* interval)/3600000  # kWh
+            if self.gpu:     
+                self.total_energy_gpu += (self.get_gpu_power() * interval )/3600000  # kWh
+            if self.memory:     
+                self.total_energy_memory += (self.get_memory_power() * interval )/3600000 #kWh
+
+            self.initial_time = period_time
+
+    def linux_monitor_amd(self):
         pass
     
     def get_cpu_power(self):
-        cpu = next((hardware for hardware in self.computer.Hardware if hardware.HardwareType == HardwareType.Cpu), None)
-        cpu.Update()
-        time.sleep(0.1)
+        if os.name == 'nt':
+            cpu = next((hardware for hardware in self.computer.Hardware if hardware.HardwareType == HardwareType.Cpu), None)
+            cpu.Update()
+            time.sleep(0.1)
+
+            power = next((sensor for sensor in cpu.Sensors if sensor.SensorType == SensorType.Power and (sensor.Name == "CPU Package" or sensor.Name == "Package")))
+            power = power.Value
+        else:
+            command = ["sudo", "perf", "stat", "-e", "power/energy-pkg/", "sleep", "0.1"]
+            power = subprocess.run(command, capture_output=True, text=True)
+
+            power = power.stderr.split(" ")
+            power = [string for string in power if string.strip()]
+
+            for index, string in enumerate(power):
+                if string.find('\n\n') != -1:
+                    power = power[index + 1]
+                    power = power.replace(",", ".")
+                    break
+            
+            power = float(power)
         
-        return next((sensor for sensor in cpu.Sensors if sensor.SensorType == SensorType.Power and (sensor.Name == "CPU Package" or sensor.Name == "Package")))
+        return power
     
     def get_gpu_power(self):
-        gpu = next((hardware for hardware in self.computer.Hardware if (hardware.HardwareType == HardwareType.GpuIntel or
-                                                        hardware.HardwareType == HardwareType.GpuAmd or
-                                                        hardware.HardwareType == HardwareType.GpuNvidia)), None)
-        gpu.Update()
-        time.sleep(0.1)
-        return next((sensor for sensor in gpu.Sensors if sensor.SensorType == SensorType.Power and (sensor.Name == "GPU Power" or sensor.Name == "GPU Package")))
+        if os.name == 'nt':
+            gpu = next((hardware for hardware in self.computer.Hardware if (hardware.HardwareType == HardwareType.GpuIntel or
+                                                            hardware.HardwareType == HardwareType.GpuAmd or
+                                                            hardware.HardwareType == HardwareType.GpuNvidia)), None)
+            gpu.Update()
+            time.sleep(0.1)
+            
+            power = next((sensor for sensor in gpu.Sensors if sensor.SensorType == SensorType.Power and (sensor.Name == "GPU Power" or sensor.Name == "GPU Package")))
+            power = power.Value
+        else:
+            command = ["sudo", "perf", "stat", "-e", "power/energy-gpu/", "sleep", "0.1"]
+            power = subprocess.run(command, capture_output=True, text=True)
+
+            power = power.stderr.split(" ")
+            power = [string for string in power if string.strip()]
+
+            for index, string in enumerate(power):
+                if string.find('\n\n') != -1:
+                    power = power[index + 1]
+                    power = power.replace(",", ".")
+                    break
+            
+            power = float(power)
+        
+        return power
     
     def get_memory_power(self):
-        memory = next((hardware for hardware in self.computer.Hardware if hardware.HardwareType == HardwareType.Memory), None)
-        memory.Update()
+        if os.name == 'nt':
+            memory = next((hardware for hardware in self.computer.Hardware if hardware.HardwareType == HardwareType.Memory), None)
+            memory.Update()
 
-        return next((sensor for sensor in memory.Sensors if sensor.SensorType == SensorType.Data and sensor.Name == "Memory Used"))
+            power = next((sensor for sensor in memory.Sensors if sensor.SensorType == SensorType.Data and sensor.Name == "Memory Used"))
+            power = power.Value
+            power *= 0.375
+        else:
+            power = psutil.virtual_memory().used
+            power /= (1024 ** 3)
+            power *= 0.375
+        
+        return power
+    
+    def check_cpu_type(self):
+        try:
+            with open('/proc/cpuinfo', 'r') as f:
+                for line in f:
+                    if line.startswith('vendor_id'):
+                        return line.strip().split(':')[1].strip()
+
+        except FileNotFoundError:
+            return None
     
     def get_energy_consumed(self):
-        if os.name == 'nt':
-            if self.computer.IsCpuEnabled:
-                if self.computer.IsGpuEnabled:
-                    if self.computer.IsMemoryEnabled:
-                        return {'cpu': self.total_energy_cpu, 'gpu': self.total_energy_gpu, 'memory': self.total_energy_memory}
-                    else:
-                        return {'cpu': self.total_energy_cpu, 'gpu': self.total_energy_gpu}
+        if self.cpu:
+            if self.gpu:
+                if self.memory:
+                    return {'cpu': self.total_energy_cpu, 'gpu': self.total_energy_gpu, 'memory': self.total_energy_memory}
                 else:
-                    return {'cpu': self.total_energy_cpu}
+                    return {'cpu': self.total_energy_cpu, 'gpu': self.total_energy_gpu}
             else:
-                return {}
+                return {'cpu': self.total_energy_cpu}
+        else:
+            return {}
         
     def get_total_energy_consumed(self):
-            
-        if os.name == 'nt':
-            if self.computer.IsCpuEnabled:
-                self.total_energy += self.total_energy_cpu
-            if self.computer.IsGpuEnabled:
-                self.total_energy += self.total_energy_gpu
-            if self.computer.IsMemoryEnabled:
-                self.total_energy += self.total_energy_memory
+        if self.cpu:
+            self.total_energy += self.total_energy_cpu
+        if self.gpu:
+            self.total_energy += self.total_energy_gpu
+        if self.memory:
+            self.total_energy += self.total_energy_memory
 
-        return {'total': self.total_energy}
+        return self.total_energy
     
     def start(self):
         self.thread.start()
