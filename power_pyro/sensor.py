@@ -111,7 +111,7 @@ class Monitor:
                     power = power.replace(",", ".")
                     break
             
-            power = float(power)
+            power = float(power)/0.1
         
         return power
     
@@ -138,7 +138,7 @@ class Monitor:
                     power = power.replace(",", ".")
                     break
             
-            power = float(power)
+            power = float(power)/0.1
         
         return power
     
