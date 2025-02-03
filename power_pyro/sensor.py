@@ -6,6 +6,8 @@ from elevate import elevate
 import subprocess
 import psutil
 
+from ResourceUnavailableException import ResourceUnavailableException
+
 if os.name == 'nt':
     elevate()
 
@@ -26,8 +28,14 @@ class Monitor:
             
             self.computer = Computer()
 
-            self.computer.IsCpuEnabled = self.cpu  
-            self.computer.IsGpuEnabled = self.gpu  
+            self.computer.IsCpuEnabled = self.cpu 
+
+            if gpu: 
+                self.computer.IsGpuEnabled = self.gpu
+                
+                if not self.is_there_dedicated_gpu():
+                  raise ResourceUnavailableException("Resource not found!")
+                
             self.computer.IsMemoryEnabled = self.memory 
         elif os.name == 'posix':
             if self.check_cpu_type() == 'GenuineIntel':
@@ -118,27 +126,15 @@ class Monitor:
     def get_gpu_power(self):
         if os.name == 'nt':
             gpu = next((hardware for hardware in self.computer.Hardware if (hardware.HardwareType == HardwareType.GpuIntel or
-                                                            hardware.HardwareType == HardwareType.GpuAmd or
-                                                            hardware.HardwareType == HardwareType.GpuNvidia)), None)
+                                                                            hardware.HardwareType == HardwareType.GpuAmd or
+                                                                            hardware.HardwareType == HardwareType.GpuNvidia)), None)
             gpu.Update()
             time.sleep(0.1)
-            
+
             power = next((sensor for sensor in gpu.Sensors if sensor.SensorType == SensorType.Power and (sensor.Name == "GPU Power" or sensor.Name == "GPU Package")))
             power = power.Value
         else:
-            command = ["sudo", "perf", "stat", "-e", "power/energy-gpu/", "sleep", "0.1"]
-            power = subprocess.run(command, capture_output=True, text=True)
-
-            power = power.stderr.split(" ")
-            power = [string for string in power if string.strip()]
-
-            for index, string in enumerate(power):
-                if string.find('\n\n') != -1:
-                    power = power[index + 1]
-                    power = power.replace(",", ".")
-                    break
-            
-            power = float(power)/0.1
+            pass
         
         return power
     
@@ -167,6 +163,23 @@ class Monitor:
         except FileNotFoundError:
             return None
     
+    def is_there_dedicated_gpu(self):
+        computer = Computer()
+        computer.Open()
+        computer.IsGpuEnabled = True
+
+        gpu = next((hardware for hardware in computer.Hardware if (hardware.HardwareType == HardwareType.GpuIntel or
+                                                                   hardware.HardwareType == HardwareType.GpuAmd)), None)
+        gpu.Update()
+        time.sleep(0.1)
+
+        if next((sensor for sensor in gpu.Sensors if sensor.Name == "D3D Shared Memory Total"), None) != None:
+            computer.Close()
+            return False
+        else: 
+            computer.Close()
+            return True
+    
     def get_energy_consumed(self):
         if self.cpu:
             if self.gpu:
@@ -175,7 +188,10 @@ class Monitor:
                 else:
                     return {'cpu': self.total_energy_cpu, 'gpu': self.total_energy_gpu}
             else:
-                return {'cpu': self.total_energy_cpu}
+                if self.memory:
+                    return {'cpu': self.total_energy_cpu, 'memory': self.total_energy_memory}
+                else:
+                    return {'cpu': self.total_energy_cpu}
         else:
             return {}
         
