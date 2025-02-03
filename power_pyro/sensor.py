@@ -34,16 +34,14 @@ class Monitor:
                 self.computer.IsGpuEnabled = self.gpu
                 
                 if not self.is_there_dedicated_gpu():
-                  raise ResourceUnavailableException("Resource not found!")
+                  raise ResourceUnavailableException("GPU", "Resource not found!")
                 
             self.computer.IsMemoryEnabled = self.memory 
         elif os.name == 'posix':
-            if self.check_cpu_type() == 'GenuineIntel':
-                self.thread = threading.Thread(target=self.linux_monitor_intel)
-            elif self.check_cpu_type() == 'AuthenticAMD':
-                self.thread = threading.Thread(target=self.linux_monitor_amd) # trocar 
-            else:
-                raise ValueError("Unable to identify CPU type")
+            self.thread = threading.Thread(target=self.linux_monitor)
+            
+            if self.is_there_nvidia_gpu():
+                self.nvidia_gpu = True
         else:
             raise ValueError("Unable to identify operating system")
 
@@ -75,7 +73,7 @@ class Monitor:
         
         self.computer.Close()
 
-    def linux_monitor_intel(self):
+    def linux_monitor(self):
 
         while not self.sign:
             self.initial_time = time.time() 
@@ -94,9 +92,6 @@ class Monitor:
                 self.total_energy_memory += (self.get_memory_power() * interval )/3600000 #kWh
 
             self.initial_time = period_time
-
-    def linux_monitor_amd(self):
-        pass
     
     def get_cpu_power(self):
         if os.name == 'nt':
@@ -134,8 +129,19 @@ class Monitor:
             power = next((sensor for sensor in gpu.Sensors if sensor.SensorType == SensorType.Power and (sensor.Name == "GPU Power" or sensor.Name == "GPU Package")))
             power = power.Value
         else:
-            pass
-        
+            if self.nvidia_gpu: 
+                try:
+                    result = subprocess.run(["nvidia-smi", "--query-gpu=power.draw", "--format=csv,noheader,nounits"],
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE,
+                                            text=True,
+                                            check=True)
+                    
+                    power = float(result.stdout.strip())
+                except Exception as e:
+                    print('Error getting power from GPU: ', e.stderr.strip())
+                    return 0.0
+
         return power
     
     def get_memory_power(self):
@@ -170,15 +176,26 @@ class Monitor:
 
         gpu = next((hardware for hardware in computer.Hardware if (hardware.HardwareType == HardwareType.GpuIntel or
                                                                    hardware.HardwareType == HardwareType.GpuAmd)), None)
-        gpu.Update()
-        time.sleep(0.1)
+        
+        if gpu != None:
+            gpu.Update()
+            time.sleep(0.1)
 
-        if next((sensor for sensor in gpu.Sensors if sensor.Name == "D3D Shared Memory Total"), None) != None:
-            computer.Close()
-            return False
-        else: 
-            computer.Close()
+            if next((sensor for sensor in gpu.Sensors if sensor.Name == "D3D Shared Memory Total"), None) != None:
+                computer.Close()
+                return False
+        
+        computer.Close()
+        return True
+    
+    def is_there_nvidia_gpu(self):
+        try:
+            subprocess.run(['nvidia-smi'], stdout=subprocess.PIPE, stderr= subprocess.PIPE, check=True)
             return True
+        except FileNotFoundError:
+            return False
+        except subprocess.CalledProcessError:
+            return False
     
     def get_energy_consumed(self):
         if self.cpu:
