@@ -153,7 +153,10 @@ class Monitor:
             power = power.Value
             power *= 0.375
         else:
-            power = psutil.virtual_memory().used
+            pid = psutil.Process().pid
+            process = psutil.Process(pid)
+
+            power = process.memory_info().rss
             power /= (1024 ** 3)
             power *= 0.375
         
