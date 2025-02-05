@@ -5,7 +5,6 @@ import threading
 from elevate import elevate
 import subprocess
 import psutil
-import re
 
 from ResourceUnavailableException import ResourceUnavailableException
 
@@ -13,43 +12,36 @@ if os.name == 'nt':
     elevate()
 
     #clr.AddReference(r"C:\Users\Alexa\OneDrive\Área de Trabalho\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
-    clr.AddReference(r"C:\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
+    clr.AddReference(r"C:\\LibreHardwareMonitor\\LibreHardwareMonitorLib.dll")
     from LibreHardwareMonitor.Hardware import Computer, HardwareType, SensorType
 
 class Monitor:
     def __init__(self, cpu=True, gpu=True, memory=True):
-        self.__sign = False
-        self.__initial_time = 0.0
-        self._cpu = cpu
-        self._gpu = gpu
-        self._memory = memory
-        self._nvidia_gpu = False
-        self._amd_gpu = False
+        self.sign = False
+        self.initial_time = 0.0
+        self.cpu = cpu
+        self.gpu = gpu
+        self.memory = memory
 
         if os.name == 'nt':
-            self.__thread = threading.Thread(target=self.windows_monitor)
+            self.thread = threading.Thread(target=self.windows_monitor)
             
-            self.__computer = Computer()
+            self.computer = Computer()
 
-            self.__computer.IsCpuEnabled = self._cpu 
+            self.computer.IsCpuEnabled = self.cpu 
 
             if gpu: 
-                self.__computer.IsGpuEnabled = self._gpu
+                self.computer.IsGpuEnabled = self.gpu
                 
-                if not self._is_there_dedicated_gpu():
+                if not self.is_there_dedicated_gpu():
                   raise ResourceUnavailableException("GPU", "Resource not found!")
                 
-            self.__computer.IsMemoryEnabled = self._memory 
+            self.computer.IsMemoryEnabled = self.memory 
         elif os.name == 'posix':
-            self.__thread = threading.Thread(target=self.linux_monitor)
+            self.thread = threading.Thread(target=self.linux_monitor)
             
-            if self._gpu:
-                if self._is_there_nvidia_gpu():
-                    self._nvidia_gpu = True
-                elif self._is_there_amd_gpu():
-                    self._amd_gpu = True
-                else:
-                    raise ResourceUnavailableException("GPU", "Resource not found!")
+            if self.is_there_nvidia_gpu():
+                self.nvidia_gpu = True
         else:
             raise ValueError("Unable to identify operating system")
 
@@ -59,51 +51,51 @@ class Monitor:
         self.total_energy = 0.0
     
     def windows_monitor(self):
-        self.__computer.Open()
+        self.computer.Open()
 
-        while not self.__sign:
-            self.__initial_time = time.time() 
+        while not self.sign:
+            self.initial_time = time.time() 
 
             time.sleep(10)
             
             period_time = time.time() 
 
-            interval = period_time - self.__initial_time
+            interval = period_time - self.initial_time
 
-            if self._cpu:     
+            if self.cpu:     
                 self.total_energy_cpu += (self.get_cpu_power() * interval)/3600000  # kWh
-            if self._gpu:     
+            if self.gpu:     
                 self.total_energy_gpu += (self.get_gpu_power() * interval )/3600000  # kWh
-            if self._memory:     
+            if self.memory:     
                 self.total_energy_memory += (self.get_memory_power() * interval )/3600000 #kWh
 
-            self.__initial_time = period_time
+            self.initial_time = period_time
         
-        self.__computer.Close()
+        self.computer.Close()
 
     def linux_monitor(self):
 
-        while not self.__sign:
-            self.__initial_time = time.time() 
+        while not self.sign:
+            self.initial_time = time.time() 
 
             time.sleep(10)
             
             period_time = time.time() 
 
-            interval = period_time - self.__initial_time
+            interval = period_time - self.initial_time
 
-            if self._cpu:     
+            if self.cpu:     
                 self.total_energy_cpu += (self.get_cpu_power()* interval)/3600000  # kWh
-            if self._gpu:     
+            if self.gpu:     
                 self.total_energy_gpu += (self.get_gpu_power() * interval )/3600000  # kWh
-            if self._memory:     
+            if self.memory:     
                 self.total_energy_memory += (self.get_memory_power() * interval )/3600000 #kWh
 
-            self.__initial_time = period_time
+            self.initial_time = period_time
     
     def get_cpu_power(self):
         if os.name == 'nt':
-            cpu = next((hardware for hardware in self.__computer.Hardware if hardware.HardwareType == HardwareType.Cpu), None)
+            cpu = next((hardware for hardware in self.computer.Hardware if hardware.HardwareType == HardwareType.Cpu), None)
             cpu.Update()
             time.sleep(0.1)
 
@@ -128,63 +120,33 @@ class Monitor:
     
     def get_gpu_power(self):
         if os.name == 'nt':
-            return self._get_generic_gpu_power_windows()
+            gpu = next((hardware for hardware in self.computer.Hardware if (hardware.HardwareType == HardwareType.GpuIntel or
+                                                                            hardware.HardwareType == HardwareType.GpuAmd or
+                                                                            hardware.HardwareType == HardwareType.GpuNvidia)), None)
+            gpu.Update()
+            time.sleep(0.1)
+
+            power = next((sensor for sensor in gpu.Sensors if sensor.SensorType == SensorType.Power and (sensor.Name == "GPU Power" or sensor.Name == "GPU Package")))
+            power = power.Value
         else:
-            if self._nvidia_gpu:
-                return self._get_nvidia_gpu_power_linux()
-            elif self._amd_gpu:
-                return self._get_amd_gpu_power_linux()
+            if self.nvidia_gpu: 
+                try:
+                    result = subprocess.run(["nvidia-smi", "--query-gpu=power.draw", "--format=csv,noheader,nounits"],
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE,
+                                            text=True,
+                                            check=True)
+                    
+                    power = float(result.stdout.strip())
+                except Exception as e:
+                    print('Error getting power from GPU: ', e.stderr.strip())
+                    return 0.0
 
-    def _get_generic_gpu_power_windows(self):
-        gpu = next((hardware for hardware in self.__computer.Hardware if (hardware.HardwareType == HardwareType.GpuIntel or
-                                                                        hardware.HardwareType == HardwareType.GpuAmd or
-                                                                        hardware.HardwareType == HardwareType.GpuNvidia)), None)
-        gpu.Update()
-        time.sleep(0.1)
-
-        power = next((sensor for sensor in gpu.Sensors if sensor.SensorType == SensorType.Power and (sensor.Name == "GPU Power" or sensor.Name == "GPU Package")))
-        return power.Value
+        return power
     
-    def _get_nvidia_gpu_power_linux(self):
-        if self._nvidia_gpu: 
-            try:
-                result = subprocess.run(["nvidia-smi", "--query-gpu=power.draw", "--format=csv,noheader,nounits"],
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE,
-                                        text=True,
-                                        check=True)
-                
-                return float(result.stdout.strip())
-            except Exception as e:
-                print('Error getting power from GPU: ', e.stderr.strip())
-                return 0.0
-            
-    def _get_amd_gpu_power_linux(self):
-        try:
-            hwmon_path = '/sys/class/hwmon/'
-
-            for hwmon in os.listdir(hwmon_path):
-                hwmon_dir = os.path.join(hwmon_path, hwmon)
-                
-                name_file = os.path.join(hwmon_dir, 'name')
-                if os.path.exists(name_file):
-                    with open(name_file, 'r') as file:
-                        device = file.read().strip()
-
-                    if device == 'amdgpu':
-                        power_file = os.path.join(hwmon_dir, 'power1_input')
-                        if os.path.exists(power_file):
-                            with open(power_file, 'r') as file:
-                                power = float(file.read().strip())
-
-                            power /= 10**6
-                            return power
-        except FileNotFoundError as e:
-            print('Error getting power from GPU: ', e.stderr.strip())
-
     def get_memory_power(self):
         if os.name == 'nt':
-            memory = next((hardware for hardware in self.__computer.Hardware if hardware.HardwareType == HardwareType.Memory), None)
+            memory = next((hardware for hardware in self.computer.Hardware if hardware.HardwareType == HardwareType.Memory), None)
             memory.Update()
 
             power = next((sensor for sensor in memory.Sensors if sensor.SensorType == SensorType.Data and sensor.Name == "Memory Used"))
@@ -200,7 +162,17 @@ class Monitor:
         
         return power
     
-    def _is_there_dedicated_gpu(self):
+    def check_cpu_type(self):
+        try:
+            with open('/proc/cpuinfo', 'r') as f:
+                for line in f:
+                    if line.startswith('vendor_id'):
+                        return line.strip().split(':')[1].strip()
+
+        except FileNotFoundError:
+            return None
+    
+    def is_there_dedicated_gpu(self):
         computer = Computer()
         computer.Open()
         computer.IsGpuEnabled = True
@@ -212,14 +184,14 @@ class Monitor:
             gpu.Update()
             time.sleep(0.1)
 
-            if next((sensor for sensor in gpu.Sensors if sensor.Name == "D3D Shared Memory Total"), None) != None:
+            if next((sensor for sensor in gpu.Sensors if sensor.Name == "D3D Dedicated Memory Used"), None) != None:
                 computer.Close()
-                return False
+                return True
         
         computer.Close()
-        return True
+        return False
     
-    def _is_there_nvidia_gpu(self):
+    def is_there_nvidia_gpu(self):
         try:
             subprocess.run(['nvidia-smi'], stdout=subprocess.PIPE, stderr= subprocess.PIPE, check=True)
             return True
@@ -227,28 +199,16 @@ class Monitor:
             return False
         except subprocess.CalledProcessError:
             return False
-        
-    def _is_there_amd_gpu(self):
-        try:
-            result = subprocess.check_output(['lspci', '-nnk'], universal_newlines=True)
-
-            for line in result.splitlines():
-                if re.search(r"( VGA | 3D )", line) and re.search(r"AMD", line.upper()): 
-                    return True
-            
-            return False
-        except Exception as e:
-            raise Exception(f'Error checking for AMD graphics card:{e}')     
     
     def get_energy_consumed(self):
-        if self._cpu:
-            if self._gpu:
-                if self._memory:
+        if self.cpu:
+            if self.gpu:
+                if self.memory:
                     return {'cpu': self.total_energy_cpu, 'gpu': self.total_energy_gpu, 'memory': self.total_energy_memory}
                 else:
                     return {'cpu': self.total_energy_cpu, 'gpu': self.total_energy_gpu}
             else:
-                if self._memory:
+                if self.memory:
                     return {'cpu': self.total_energy_cpu, 'memory': self.total_energy_memory}
                 else:
                     return {'cpu': self.total_energy_cpu}
@@ -256,18 +216,18 @@ class Monitor:
             return {}
         
     def get_total_energy_consumed(self):
-        if self._cpu:
+        if self.cpu:
             self.total_energy += self.total_energy_cpu
-        if self._gpu:
+        if self.gpu:
             self.total_energy += self.total_energy_gpu
-        if self._memory:
+        if self.memory:
             self.total_energy += self.total_energy_memory
 
         return self.total_energy
     
     def start(self):
-        self.__thread.start()
+        self.thread.start()
 
     def end(self):
-        self.__sign = True
-        self.__thread.join()
+        self.sign = True
+        self.thread.join()
