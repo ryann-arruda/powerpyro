@@ -61,6 +61,16 @@ class Monitor:
     def windows_monitor(self):
         self.__computer.Open()
 
+        # All CPU use
+        psutil.cpu_percent(interval=None)
+
+        # Specific process
+        pid = os.getpid()
+        parent = psutil.Process(pid)
+        parent.cpu_percent(interval=None)
+        num_cores = psutil.cpu_count(logical=True)
+        print(f"Número de Núcleos: {num_cores}")
+
         while not self.__sign:
             self.__initial_time = time.time() 
 
@@ -69,6 +79,10 @@ class Monitor:
             period_time = time.time() 
 
             interval = period_time - self.__initial_time
+
+            total_cpu_percent = psutil.cpu_percent(interval=None)
+            print(f"total_cpu_percent: {total_cpu_percent}")
+            print(f"specific_cpu_percent: {(parent.cpu_percent(interval=None)/num_cores)/total_cpu_percent * 100.0}")
 
             if self._cpu:     
                 self.total_energy_cpu += (self.get_cpu_power() * interval)/3600000  # kWh
