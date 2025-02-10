@@ -26,6 +26,8 @@ class Monitor:
         self._nvidia_gpu = False
         self._amd_gpu = False
 
+        print(os.getpid())
+
         if os.name == 'nt':
             self.__thread = threading.Thread(target=self.windows_monitor)
             
@@ -62,14 +64,17 @@ class Monitor:
         self.__computer.Open()
 
         # All CPU use
-        psutil.cpu_percent(interval=None)
+        psutil.cpu_percent(interval=0.1)
 
         # Specific process
         pid = os.getpid()
+        print(pid)
         parent = psutil.Process(pid)
-        parent.cpu_percent(interval=None)
-        num_cores = psutil.cpu_count(logical=True)
-        print(f"Número de Núcleos: {num_cores}")
+        parent.cpu_percent(interval=0.1)
+        num_cores_logic = psutil.cpu_count(logical=True)
+        num_cores_physical  = psutil.cpu_count(logical=False)
+        print(f"Número de Núcleos Lógicos: {num_cores_logic}")
+        print(f"Número de Núcleos Físicos: {num_cores_physical}")
 
         while not self.__sign:
             self.__initial_time = time.time() 
@@ -81,8 +86,11 @@ class Monitor:
             interval = period_time - self.__initial_time
 
             total_cpu_percent = psutil.cpu_percent(interval=None)
+            parent_cpu_percent = parent.cpu_percent(interval=None)
             print(f"total_cpu_percent: {total_cpu_percent}")
-            print(f"specific_cpu_percent: {(parent.cpu_percent(interval=None)/num_cores)/total_cpu_percent * 100.0}")
+            print(f"parent: {parent_cpu_percent}")
+            print(f"specific_cpu_percent(logic): {(parent_cpu_percent/num_cores_logic)/ total_cpu_percent * 100.0:.6f}")
+            print(f"specific_cpu_percent(physical): {(parent_cpu_percent/num_cores_physical)/ total_cpu_percent * 100.0:.6f}\n\n")
 
             if self._cpu:     
                 self.total_energy_cpu += (self.get_cpu_power() * interval)/3600000  # kWh
@@ -220,7 +228,8 @@ class Monitor:
         computer.IsGpuEnabled = True
 
         gpu = next((hardware for hardware in computer.Hardware if (hardware.HardwareType == HardwareType.GpuIntel or
-                                                                   hardware.HardwareType == HardwareType.GpuAmd)), None)
+                                                                   hardware.HardwareType == HardwareType.GpuAmd or
+                                                                   hardware.HardwareType == HardwareType.GpuNvidia)), None)
         
         if gpu != None:
             gpu.Update()
