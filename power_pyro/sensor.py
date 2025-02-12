@@ -63,19 +63,6 @@ class Monitor:
     def windows_monitor(self):
         self.__computer.Open()
 
-        # All CPU use
-        psutil.cpu_percent(interval=0.1)
-
-        # Specific process
-        pid = os.getpid()
-        print(pid)
-        parent = psutil.Process(pid)
-        parent.cpu_percent(interval=0.1)
-        num_cores_logic = psutil.cpu_count(logical=True)
-        num_cores_physical  = psutil.cpu_count(logical=False)
-        print(f"Número de Núcleos Lógicos: {num_cores_logic}")
-        print(f"Número de Núcleos Físicos: {num_cores_physical}")
-
         while not self.__sign:
             self.__initial_time = time.time() 
 
@@ -85,15 +72,8 @@ class Monitor:
 
             interval = period_time - self.__initial_time
 
-            total_cpu_percent = psutil.cpu_percent(interval=None)
-            parent_cpu_percent = parent.cpu_percent(interval=None)
-            print(f"total_cpu_percent: {total_cpu_percent}")
-            print(f"parent: {parent_cpu_percent}")
-            print(f"specific_cpu_percent(logic): {(parent_cpu_percent/num_cores_logic)/ total_cpu_percent * 100.0:.6f}")
-            print(f"specific_cpu_percent(physical): {(parent_cpu_percent/num_cores_physical)/ total_cpu_percent * 100.0:.6f}\n\n")
-
             if self._cpu:     
-                self.total_energy_cpu += (self.get_cpu_power() * interval)/3600000  # kWh
+                self.total_energy_cpu += (self.get_cpu_power() * self._get_cpu_percent_process() * interval)/3600000  # kWh
             if self._gpu:     
                 self.total_energy_gpu += (self.get_gpu_power() * interval )/3600000  # kWh
             if self._memory:     
@@ -261,7 +241,30 @@ class Monitor:
             
             return False
         except Exception as e:
-            raise Exception(f'Error checking for AMD graphics card:{e}')     
+            raise Exception(f'Error checking for AMD graphics card:{e}')    
+
+    def _get_cpu_percent_process(self):
+        script_pid = os.getpid()
+        sum_all = 0
+        cpu_percent = 0
+        for process in psutil.process_iter():
+            try:
+                with process.oneshot():
+                    process_pid = process.pid
+                    process_cpu_percent = process.cpu_percent()
+
+                    if process_pid:
+                        sum_all += process_cpu_percent
+
+                        if process_pid == script_pid:
+                            cpu_percent += process_cpu_percent
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass
+            
+        if sum_all != 0:
+            return cpu_percent/sum_all
+        else:
+            return 0.0
     
     def get_energy_consumed(self):
         if self._cpu:
