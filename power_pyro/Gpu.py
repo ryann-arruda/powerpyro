@@ -1,5 +1,7 @@
 from hardware_component import HardwareComponent
 from gpu_type import GpuType
+from os_type import OsType
+
 from time import time
 import subprocess
 import re
@@ -17,8 +19,27 @@ if os.name == 'nt':
 class Gpu(HardwareComponent):
     def __init__(self):
         self.__manufacturer: GpuType
+
+        if self.get_operating_system() == OsType.WINDOWS:
+            self.__computer: Computer = Computer()
+            self.__computer.IsGpuEnabled = True
+
+            if not self.__is_there_dedicated_gpu_windows():
+                raise ResourceUnavailableException("GPU", "Resource not found!")
+        
+        elif self.get_operating_system() == OsType.LINUX:
+
+            if self.__is_there_nvidia_on_linux():
+                self.__manufacturer = GpuType.NVIDIA
+            elif self.__is_there_amd_on_linux():
+                self.__manufacturer = GpuType.AMD
+            else:
+                raise ResourceUnavailableException("GPU", "Resource not found!")
+        
+        else:
+            raise OSError("Unable to identify operating system")
     
-    def __is_there_dedicated_gpu_windows() -> bool:
+    def __is_there_dedicated_gpu_windows(self) -> bool:
         computer = Computer()
         computer.Open()
         computer.IsGpuEnabled = True
@@ -37,8 +58,20 @@ class Gpu(HardwareComponent):
         
         computer.Close()
         return False
+    
+    def get_power(self) -> float:
 
-    def __get_power_on_windows() -> float:
+        if self.get_operating_system() == OsType.WINDOWS:
+            return self.__get_power_on_windows()
+
+        elif self.get_operating_system() == OsType.LINUX:
+
+            if self.__manufacturer == GpuType.NVIDIA:
+                return self.__get_nvidia_power_on_linux()
+            elif self.__manufacturer == GpuType.AMD:
+                return self.__get_amd_power_on_linux()
+
+    def __get_power_on_windows(self) -> float:
         gpu = next((hardware for hardware in self.__computer.Hardware if (hardware.HardwareType == HardwareType.GpuIntel or
                                                                         hardware.HardwareType == HardwareType.GpuAmd or
                                                                         hardware.HardwareType == HardwareType.GpuNvidia)), None)
@@ -48,7 +81,7 @@ class Gpu(HardwareComponent):
         power = next((sensor for sensor in gpu.Sensors if sensor.SensorType == SensorType.Power and (sensor.Name == "GPU Power" or sensor.Name == "GPU Package")))
         return power.Value
 
-    def __is_there_nvidia_on_linux() -> bool:
+    def __is_there_nvidia_on_linux(self) -> bool:
         try:
             subprocess.run(['nvidia-smi'], stdout=subprocess.PIPE, stderr= subprocess.PIPE, check=True)
             return True
@@ -57,7 +90,7 @@ class Gpu(HardwareComponent):
         except subprocess.CalledProcessError:
             return False
     
-    def __get_nvidia_power_on_linux() -> float:
+    def __get_nvidia_power_on_linux(self) -> float:
         if self._nvidia_gpu: 
             try:
                 result = subprocess.run(["nvidia-smi", "--query-gpu=power.draw", "--format=csv,noheader,nounits"],
@@ -71,7 +104,7 @@ class Gpu(HardwareComponent):
                 print('Error getting power from GPU: ', e.stderr.strip())
                 return 0.0
     
-    def __is_there_amd_on_linux() -> bool:
+    def __is_there_amd_on_linux(self) -> bool:
         try:
             result = subprocess.check_output(['lspci', '-nnk'], universal_newlines=True)
 
@@ -83,7 +116,7 @@ class Gpu(HardwareComponent):
         except Exception as e:
             raise Exception(f'Error checking for AMD graphics card:{e}')    
     
-    def __get_amd_power_on_linux() -> float:
+    def __get_amd_power_on_linux(self) -> float:
         try:
             hwmon_path = '/sys/class/hwmon/'
 
