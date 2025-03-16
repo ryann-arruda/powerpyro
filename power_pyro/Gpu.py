@@ -1,6 +1,9 @@
-from hardware_component import HardwareComponent
+from processing_unit import ProcessingUnit
 from gpu_type import GpuType
 from os_type import OsType
+from identify_hardware_manufacturer_exception import IdentifyHardwareManufacturerException
+from resource_unavailable_exception import ResourceUnavailableException
+from hardware_type import HardwareType as HT
 
 from time import time
 import subprocess
@@ -16,28 +19,15 @@ if os.name == 'nt':
     clr.AddReference(r"C:\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
     from LibreHardwareMonitor.Hardware import Computer, HardwareType, SensorType
 
-class Gpu(HardwareComponent):
-    def __init__(self):
+class Gpu(ProcessingUnit):
+    def __init__(self, operating_system: OsType):
+        super().__init__(operating_system)
         self.__manufacturer: GpuType
 
-        if self.get_operating_system() == OsType.WINDOWS:
-            self.__computer: Computer = Computer()
-            self.__computer.IsGpuEnabled = True
+        if operating_system == OsType.WINDOWS:
+            self.get_computer().IsGpuEnabled = True        
 
-            if not self.__is_there_dedicated_gpu_windows():
-                raise ResourceUnavailableException("GPU", "Resource not found!")
-        
-        elif self.get_operating_system() == OsType.LINUX:
-
-            if self.__is_there_nvidia_on_linux():
-                self.__manufacturer = GpuType.NVIDIA
-            elif self.__is_there_amd_on_linux():
-                self.__manufacturer = GpuType.AMD
-            else:
-                raise ResourceUnavailableException("GPU", "Resource not found!")
-        
-        else:
-            raise OSError("Unable to identify operating system")
+        self.__update_manufacture()
     
     def __is_there_dedicated_gpu_windows(self) -> bool:
         computer = Computer()
@@ -59,6 +49,45 @@ class Gpu(HardwareComponent):
         computer.Close()
         return False
     
+    def __update_manufacture(self) -> None:
+        
+        if self.get_operating_system() == OsType.WINDOWS:
+            self.__update_manufacture_windows()
+        
+        elif self.get_operating_system() == OsType.LINUX:
+            self.__update_manufacture_linux()
+        else:
+            raise OSError("Unable to identify operating system")
+
+    def __update_manufacture_windows(self) -> None:
+
+        if not self.__is_there_dedicated_gpu_windows():
+            raise ResourceUnavailableException("GPU", "Resource not found!")
+        
+        computer = Computer()
+        computer.Open()
+        computer.IsGpuEnabled = True
+
+        for hardware in computer.Hardware:
+            hardware_type = str(hardware.HardwareType)
+
+            if hardware_type == 'GpuNvidia':
+                self.__manufacturer = GpuType.NVIDIA
+            elif hardware_type == 'GpuAmd':
+                self.__manufacturer = GpuType.AMD
+            else:
+                raise IdentifyHardwareManufacturerException(HT.GPU)
+        
+        computer.Close()
+
+    def __update_manufacture_linux(self) -> None:
+        if self.__is_there_nvidia_on_linux():
+            self.__manufacturer = GpuType.NVIDIA
+        elif self.__is_there_amd_on_linux():
+            self.__manufacturer = GpuType.AMD
+        else:
+            raise ResourceUnavailableException("GPU", "Resource not found!")
+    
     def get_power(self) -> float:
 
         if self.get_operating_system() == OsType.WINDOWS:
@@ -72,7 +101,7 @@ class Gpu(HardwareComponent):
                 return self.__get_amd_power_on_linux()
 
     def __get_power_on_windows(self) -> float:
-        gpu = next((hardware for hardware in self.__computer.Hardware if (hardware.HardwareType == HardwareType.GpuIntel or
+        gpu = next((hardware for hardware in self.get_computer().Hardware if (hardware.HardwareType == HardwareType.GpuIntel or
                                                                         hardware.HardwareType == HardwareType.GpuAmd or
                                                                         hardware.HardwareType == HardwareType.GpuNvidia)), None)
         gpu.Update()
