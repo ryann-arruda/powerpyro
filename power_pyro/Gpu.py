@@ -86,15 +86,14 @@ class Gpu(ProcessingUnit):
         elif self.__is_there_amd_on_linux():
             self.__manufacturer = GpuType.AMD
         else:
-            raise ResourceUnavailableException("GPU", "Resource not found!")
+            raise IdentifyHardwareManufacturerException(HT.GPU)
     
     def get_power(self) -> float:
 
         if self.get_operating_system() == OsType.WINDOWS:
             return self.__get_power_on_windows()
 
-        elif self.get_operating_system() == OsType.LINUX:
-
+        else:
             if self.__manufacturer == GpuType.NVIDIA:
                 return self.__get_nvidia_power_on_linux()
             elif self.__manufacturer == GpuType.AMD:
