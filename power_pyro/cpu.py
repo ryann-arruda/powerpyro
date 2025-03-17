@@ -21,13 +21,17 @@ if os.name == 'nt':
     from LibreHardwareMonitor.Hardware import Computer, HardwareType, SensorType
 
 class Cpu(ProcessingUnit):
-    def __init__(self):
+    def __init__(self, operating_system: OsType):
+        super().__init__(operating_system)
         self.__manufacturer: CpuType
 
         if self.get_operating_system() == OsType.WINDOWS:
             self.get_computer().IsCpuEnabled = True
         
         self.__update_manufacture()
+    
+    def get_manufacturer(self) -> CpuType:
+        return self.__manufacturer
 
     def __update_manufacture(self) -> None:
         if self.get_operating_system() == OsType.WINDOWS:
