@@ -29,6 +29,9 @@ class Gpu(ProcessingUnit):
 
         self.__update_manufacture()
     
+    def get_manufacturer(self) -> GpuType:
+        return self.__manufacturer
+    
     def __is_there_dedicated_gpu_windows(self) -> bool:
         computer = Computer()
         computer.Open()
