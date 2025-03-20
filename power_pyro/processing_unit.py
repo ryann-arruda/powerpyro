@@ -24,6 +24,12 @@ class ProcessingUnit(HardwareComponent):
     def get_computer(self) -> Computer:
         return self.__computer
     
+    def open(self) -> None:
+        self.__computer.Open()
+    
+    def close(self) -> None:
+        self.__computer.Close()
+    
     @abstractmethod
     def __update_manufacture(self) -> None:
         pass
