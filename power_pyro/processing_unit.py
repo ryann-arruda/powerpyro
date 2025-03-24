@@ -29,5 +29,5 @@ class ProcessingUnit(HardwareComponent):
         self.__computer.Close()
     
     @abstractmethod
-    def __update_manufacture(self) -> None:
+    def _update_manufacture(self) -> None:
         pass
