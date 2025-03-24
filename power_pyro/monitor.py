@@ -38,15 +38,15 @@ class Monitor():
             raise InvalidKeysErrorException()
 
         factories: Dict[str, HardwareComponentFactory] = { 
-            'cpu': CpuComponentFactory(self.__operating_system),
-            'gpu': GpuComponentFactory(self.__operating_system),
-            'memory': MemoryComponentFactory(self.__operating_system)
+            'cpu': CpuComponentFactory(),
+            'gpu': GpuComponentFactory(),
+            'memory': MemoryComponentFactory()
         }
 
         components: Dict[str, HardwareComponent] = []
         
         for component in required_components:
-            components[component] = factories[component]
+            components[component] = factories[component].create_component(self.__operating_system)
 
             if hasattr(components[component], 'open'):
                 components[component].open()
