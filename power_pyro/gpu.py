@@ -9,11 +9,9 @@ from time import time
 import subprocess
 import re
 import os
-from elevate import elevate
 import clr
 
 if os.name == 'nt':
-    elevate()
 
     #clr.AddReference(r"C:\Users\Alexa\OneDrive\Área de Trabalho\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
     clr.AddReference(r"C:\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")

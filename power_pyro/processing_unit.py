@@ -1,13 +1,11 @@
 from hardware_component import HardwareComponent
 from os_type import OsType
 
-from elevate import elevate
 import clr
 import os
 from abc import abstractmethod
 
 if os.name == 'nt':
-    elevate()
 
     #clr.AddReference(r"C:\Users\Alexa\OneDrive\Área de Trabalho\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
     clr.AddReference(r"C:\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")

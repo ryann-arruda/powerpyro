@@ -5,7 +5,6 @@ from identify_hardware_manufacturer_exception import IdentifyHardwareManufacture
 from hardware_component import HardwareType as HT
 
 import os
-from elevate import elevate
 import clr
 import wmi
 import cpuinfo
@@ -14,7 +13,6 @@ import time
 import psutil
 
 if os.name == 'nt':
-    elevate()
 
     #clr.AddReference(r"C:\Users\Alexa\OneDrive\Área de Trabalho\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
     clr.AddReference(r"C:\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
