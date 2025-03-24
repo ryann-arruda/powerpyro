@@ -25,7 +25,7 @@ class Gpu(ProcessingUnit):
         if operating_system == OsType.WINDOWS:
             self.get_computer().IsGpuEnabled = True        
 
-        self.__update_manufacture()
+        self._update_manufacture()
     
     def get_manufacturer(self) -> GpuType:
         return self.__manufacturer
@@ -50,7 +50,7 @@ class Gpu(ProcessingUnit):
         computer.Close()
         return False
     
-    def __update_manufacture(self) -> None:
+    def _update_manufacture(self) -> None:
         
         if self.get_operating_system() == OsType.WINDOWS:
             self.__update_manufacture_windows()

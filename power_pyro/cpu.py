@@ -2,7 +2,7 @@ from processing_unit import ProcessingUnit
 from cpu_type import CpuType
 from os_type import OsType
 from identify_hardware_manufacturer_exception import IdentifyHardwareManufacturerException
-from hardware_component import HardwareType as HT
+from hardware_type import HardwareType as HT
 
 import os
 import clr
@@ -26,12 +26,12 @@ class Cpu(ProcessingUnit):
         if self.get_operating_system() == OsType.WINDOWS:
             self.get_computer().IsCpuEnabled = True
         
-        self.__update_manufacture()
+        self._update_manufacture()
     
     def get_manufacturer(self) -> CpuType:
         return self.__manufacturer
 
-    def __update_manufacture(self) -> None:
+    def _update_manufacture(self) -> None:
         if self.get_operating_system() == OsType.WINDOWS:
             self.__update_manufacture_windows()
         
