@@ -16,7 +16,7 @@ if os.name == 'nt':
 
     #clr.AddReference(r"C:\Users\Alexa\OneDrive\Área de Trabalho\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
     clr.AddReference(r"C:\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
-    from LibreHardwareMonitor.Hardware import Computer, HardwareType, SensorType
+    from LibreHardwareMonitor.Hardware import HardwareType, SensorType
 
 class Cpu(ProcessingUnit):
     def __init__(self, operating_system: OsType):
@@ -90,7 +90,7 @@ class Cpu(ProcessingUnit):
         return power
 
     def __get_power_on_windows(self) -> float:
-        cpu = next((hardware for hardware in self.__computer.Hardware if hardware.HardwareType == HardwareType.Cpu), None)
+        cpu = next((hardware for hardware in self.get_computer().Hardware if hardware.HardwareType == HardwareType.Cpu), None)
         cpu.Update()
         time.sleep(0.1)
 
