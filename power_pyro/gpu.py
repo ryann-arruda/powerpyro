@@ -5,7 +5,7 @@ from identify_hardware_manufacturer_exception import IdentifyHardwareManufacture
 from resource_unavailable_exception import ResourceUnavailableException
 from hardware_type import HardwareType as HT
 
-from time import time
+import time
 import subprocess
 import re
 import os
