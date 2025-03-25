@@ -43,7 +43,7 @@ class Cpu(ProcessingUnit):
     def __update_manufacture_windows(self) -> None:
         wmi_session = wmi.WMI()
 
-        manufacturer = wmi_session.Win32_Processor()[0]
+        manufacturer = wmi_session.Win32_Processor()[0].Manufacturer
 
         if manufacturer == 'GenuineIntel':
             self.__manufacturer = CpuType.INTEL
