@@ -31,7 +31,7 @@ class Monitor():
     def __check_components(self, required_components: Dict[str, bool]) -> bool:
         required_keys = ['cpu', 'gpu', 'memory']
 
-        return len(required_components.keys()) == len(required_keys) and all(key in required_components for key in required_keys)
+        return len(required_components.keys()) <= len(required_keys) and all(key in required_keys for key in required_components)
     
     def __create_components(self, required_components: Dict[str, bool]) -> Dict[str, HardwareComponent]:
         if not self.__check_components(required_components):
