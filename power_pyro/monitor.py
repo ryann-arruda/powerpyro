@@ -43,7 +43,7 @@ class Monitor():
             'memory': MemoryComponentFactory()
         }
 
-        components: Dict[str, HardwareComponent] = []
+        components: Dict[str, HardwareComponent] = {}
         
         for component in required_components:
             components[component] = factories[component].create_component(self.__operating_system)
