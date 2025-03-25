@@ -75,7 +75,7 @@ class Monitor():
 
             if 'cpu' in self.__components: 
                 cpu = self.__components['cpu']
-                cpu.update_energy_consumed((cpu.get_power() * cpu.get_cpu_percent_process() * period)/self.__WATT_TO_KWH)
+                cpu.update_energy_consumed((cpu.get_power() * cpu.get_cpu_percent_for_process() * period)/self.__WATT_TO_KWH)
 
             if 'gpu' in self.__components:   
                 gpu = self.__components['gpu']  
