@@ -64,6 +64,23 @@ class Cpu(ProcessingUnit):
         else:
             raise IdentifyHardwareManufacturerException(HT.CPU)
     
+    def _update_hardware_name(self) -> None:
+        
+        if self.get_operating_system() == OsType.WINDOWS:
+            self.__update_hardware_name_windows()
+        elif self.get_operating_system() == OsType.LINUX:
+            self.__update_hardware_name_linux
+        else:
+            raise OSError("Unable to identify operating system")
+    
+    def __update_hardware_name_windows(self) -> None:
+        wmi_session = wmi.WMI()
+
+        self.set_name(wmi_session.Win32_Processor()[0].Name)
+
+    def __update_hardware_name_linux(self) -> None:
+        self.set_name(cpuinfo.get_cpu_info()['brand_raw'])
+    
     def get_power(self) -> float:
 
         if self.get_operating_system() == OsType.WINDOWS:
