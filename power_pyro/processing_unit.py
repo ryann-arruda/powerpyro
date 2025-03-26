@@ -16,8 +16,16 @@ class ProcessingUnit(HardwareComponent):
     def __init__(self, operating_system: OsType):
         super().__init__(operating_system)
 
+        self.__name:str = None
+
         if operating_system == OsType.WINDOWS:
             self.__computer: Computer = Computer()
+
+    def get_name(self) -> str:
+        return self.__name
+    
+    def set_name(self, name:str) -> None:
+        self.__name = name
     
     def get_computer(self) -> Computer:
         return self.__computer
@@ -30,4 +38,8 @@ class ProcessingUnit(HardwareComponent):
     
     @abstractmethod
     def _update_manufacture(self) -> None:
+        pass
+
+    @abstractmethod
+    def _update_hardware_name(self) -> None:
         pass
