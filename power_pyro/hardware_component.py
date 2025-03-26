@@ -3,7 +3,7 @@ from os_type import OsType
 
 class HardwareComponent(ABC):
     def __init__(self, operating_system: OsType):
-        self.__name:str
+        self.__name:str # TODO: Initialize this attribute
         self.__total_energy_consumed:float = 0.0
         self.__operating_system: OsType = operating_system
     
