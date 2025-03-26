@@ -2,6 +2,7 @@ from processing_unit import ProcessingUnit
 from gpu_type import GpuType
 from os_type import OsType
 from identify_hardware_manufacturer_exception import IdentifyHardwareManufacturerException
+from hardware_name_identify_exception import HardwareNameIdentifyException
 from resource_unavailable_exception import ResourceUnavailableException
 from hardware_type import HardwareType as HT
 
@@ -88,6 +89,36 @@ class Gpu(ProcessingUnit):
             self.__manufacturer = GpuType.AMD
         else:
             raise IdentifyHardwareManufacturerException(HT.GPU)
+    
+    def _update_hardware_name(self) -> None:
+        if self.get_operating_system() == OsType.WINDOWS:
+            self.__update_hardware_name_windows()
+        elif self.get_operating_system() == OsType.LINUX:
+            self.__update_hardware_name_linux
+        else:
+            raise OSError("Unable to identify operating system")
+    
+    def __update_hardware_name_windows(self) -> None:
+        if not self.__is_there_dedicated_gpu_windows():
+            raise ResourceUnavailableException("GPU", "Resource not found!")
+        
+        computer = Computer()
+        computer.Open()
+        computer.IsGpuEnabled = True
+
+        for hardware in computer.Hardware:
+            self.set_name(hardware.Name)
+        
+        computer.Close()
+    
+    def __update_hardware_name_linux(self) -> None:
+        if self.__is_there_nvidia_on_linux():
+            self.set_name(subprocess.check_output("nvidia-smi --query-gpu=name --format=csv,noheader", shell=True).decode().strip())
+        elif self.__is_there_amd_on_linux():
+            output = subprocess.check_output("lspci | grep -i vga", shell=True).decode().strip()
+            self.set_name(re.findall(r'\w+ \w+ \w+ \w+ / \w+ \w+\W\w+', output))
+        else:
+            raise HardwareNameIdentifyException(HT.GPU)
     
     def get_power(self) -> float:
 
