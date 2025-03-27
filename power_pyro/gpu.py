@@ -46,6 +46,13 @@ class Gpu(ProcessingUnit):
         return self.__manufacturer
     
     def __is_there_dedicated_gpu_windows(self) -> bool:
+        """" Check if it is a dedicated gpu in Windows OS.
+
+        Returns:
+            bool: 
+                - 'True' if a dedicated gpu is found on Windows.
+                - 'False' if a dedicated gpu is not found in Windows.
+        """
         computer = Computer()
         computer.Open()
         computer.IsGpuEnabled = True
@@ -102,6 +109,12 @@ class Gpu(ProcessingUnit):
         computer.Close()
 
     def __update_manufacture_linux(self) -> None:
+        """Update hardware manufacturer when running on Linux OS.
+        
+        Raises:
+            IdentifyHardwareManufacturerException: If the hardware manufacturer cannot be identified.
+        """
+
         if self.__is_there_nvidia_on_linux():
             self.__manufacturer = GpuType.NVIDIA
         elif self.__is_there_amd_on_linux():
@@ -118,6 +131,11 @@ class Gpu(ProcessingUnit):
             raise OSError("Unable to identify operating system")
     
     def __update_hardware_name_windows(self) -> None:
+        """ Set the gpu name.
+        
+        Raises:
+             ResourceUnavailableException: If a dedicated gpu is not found in Windows.
+        """
         if not self.__is_there_dedicated_gpu_windows():
             raise ResourceUnavailableException("GPU", "Resource not found!")
         
@@ -131,6 +149,11 @@ class Gpu(ProcessingUnit):
         computer.Close()
     
     def __update_hardware_name_linux(self) -> None:
+        """ Set the gpu name.
+        
+        Raises:
+             HardwareNameIdentifyException: Unable to identify gpu name in linux.
+        """
         if self.__is_there_nvidia_on_linux():
             self.set_name(subprocess.check_output("nvidia-smi --query-gpu=name --format=csv,noheader", shell=True).decode().strip())
         elif self.__is_there_amd_on_linux():
@@ -151,6 +174,11 @@ class Gpu(ProcessingUnit):
                 return self.__get_amd_power_on_linux()
 
     def __get_power_on_windows(self) -> float:
+        """" Returns the value of the gpu power in W in Windows.
+
+        Returns:
+            float: gpu power.
+        """
         gpu = next((hardware for hardware in self.get_computer().Hardware if (hardware.HardwareType == HardwareType.GpuIntel or
                                                                         hardware.HardwareType == HardwareType.GpuAmd or
                                                                         hardware.HardwareType == HardwareType.GpuNvidia)), None)
@@ -161,6 +189,13 @@ class Gpu(ProcessingUnit):
         return power.Value
 
     def __is_there_nvidia_on_linux(self) -> bool:
+        """" Check if the gpu present in linux is nvidia.
+
+        Returns:
+            bool: 
+                - 'True' if you have nvidia gpu on linux.
+                - 'False' if you don't have nvidia gpu on linux.
+        """
         try:
             subprocess.run(['nvidia-smi'], stdout=subprocess.PIPE, stderr= subprocess.PIPE, check=True)
             return True
@@ -170,6 +205,11 @@ class Gpu(ProcessingUnit):
             return False
     
     def __get_nvidia_power_on_linux(self) -> float:
+        """" Returns the value of the nvidia gpu power in W in Linux.
+
+        Returns:
+            float: gpu power.
+        """
         if self._nvidia_gpu: 
             try:
                 result = subprocess.run(["nvidia-smi", "--query-gpu=power.draw", "--format=csv,noheader,nounits"],
@@ -184,6 +224,13 @@ class Gpu(ProcessingUnit):
                 return 0.0
     
     def __is_there_amd_on_linux(self) -> bool:
+        """" Check if the gpu present in linux is amd.
+
+        Returns:
+            bool: 
+                - 'True' if you have amd gpu on linux.
+                - 'False' if you don't have amd gpu on linux.
+        """
         try:
             result = subprocess.check_output(['lspci', '-nnk'], universal_newlines=True)
 
@@ -196,6 +243,11 @@ class Gpu(ProcessingUnit):
             raise Exception(f'Error checking for AMD graphics card:{e}')    
     
     def __get_amd_power_on_linux(self) -> float:
+        """" Returns the value of the amd gpu power in W in Linux.
+
+        Returns:
+            float: gpu power.
+        """
         try:
             hwmon_path = '/sys/class/hwmon/'
 
