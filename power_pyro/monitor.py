@@ -59,6 +59,23 @@ class Monitor():
             if hasattr(self.__components[component], 'close'):
                 self.__components[component].close()
     
+    def get_energy_consumed_by_components(self) -> Dict[str, float]:
+        energy_consumed_by_components: Dict[str, float] = {}
+
+        if 'cpu' in self.__components:
+            energy_consumed_by_components['cpu'] = self.__components['cpu'].get_total_energy_consumed()
+
+            if 'gpu' in self.__components:
+                energy_consumed_by_components['gpu'] = self.__components['gpu'].get_total_energy_consumed()
+
+                if 'memory' in self.__components:
+                    energy_consumed_by_components['memory'] = self.__components['memory'].get_total_energy_consumed()
+            
+            if 'memory' in self.__components:
+                energy_consumed_by_components['memory'] = self.__components['memory'].get_total_energy_consumed()
+        
+        return energy_consumed_by_components
+    
     def get_total_energy_consumed(self) -> float:
         return self.__total_energy_consumed
 
