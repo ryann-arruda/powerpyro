@@ -73,7 +73,6 @@ class Gpu(ProcessingUnit):
         return False
     
     def _update_manufacture(self) -> None:
-        
         if self.get_operating_system() == OsType.WINDOWS:
             self.__update_manufacture_windows()
         
@@ -153,16 +152,18 @@ class Gpu(ProcessingUnit):
         Raises:
              HardwareNameIdentifyException: Unable to identify GPU name in Linux.
         """
-        if self.__is_there_nvidia_on_linux():
-            self.set_name(subprocess.check_output("nvidia-smi --query-gpu=name --format=csv,noheader", shell=True).decode().strip())
-        elif self.__is_there_amd_on_linux():
-            output = subprocess.check_output("lspci | grep -i vga", shell=True).decode().strip()
-            self.set_name(re.findall(r'\w+ \w+ \w+ \w+ / \w+ \w+\W\w+', output))
-        else:
+        try:
+            if self.__is_there_nvidia_on_linux():
+                self.set_name(subprocess.check_output("nvidia-smi --query-gpu=name --format=csv,noheader", shell=True).decode().strip())
+            elif self.__is_there_amd_on_linux():
+                output = subprocess.check_output("lspci | grep -i vga", shell=True).decode().strip()
+                self.set_name(re.findall(r'\w+ \w+ \w+ \w+ / \w+ \w+\W\w+', output))
+            else:
+                raise HardwareNameIdentifyException(HT.GPU)
+        except (FileNotFoundError, subprocess.CalledProcessError, UnicodeDecodeError):
             raise HardwareNameIdentifyException(HT.GPU)
     
     def get_power(self) -> float:
-
         if self.get_operating_system() == OsType.WINDOWS:
             return self.__get_power_on_windows()
 
@@ -198,9 +199,7 @@ class Gpu(ProcessingUnit):
         try:
             subprocess.run(['nvidia-smi'], stdout=subprocess.PIPE, stderr= subprocess.PIPE, check=True)
             return True
-        except FileNotFoundError:
-            return False
-        except subprocess.CalledProcessError:
+        except (FileNotFoundError, subprocess.CalledProcessError):
             return False
     
     def __get_nvidia_power_on_linux(self) -> float:
@@ -209,18 +208,17 @@ class Gpu(ProcessingUnit):
         Returns:
             float: GPU power.
         """
-        if self._nvidia_gpu: 
-            try:
-                result = subprocess.run(["nvidia-smi", "--query-gpu=power.draw", "--format=csv,noheader,nounits"],
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE,
-                                        text=True,
-                                        check=True)
-                
-                return float(result.stdout.strip())
-            except Exception as e:
-                print('Error getting power from GPU: ', e.stderr.strip())
-                return 0.0
+        try:
+            result = subprocess.run(["nvidia-smi", "--query-gpu=power.draw", "--format=csv,noheader,nounits"],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                    text=True,
+                                    check=True)
+            
+            return float(result.stdout.strip())
+        except Exception as e:
+            print('Error getting power from GPU: ', str(e))
+            return 0.0
     
     def __is_there_amd_on_linux(self) -> bool:
         """" Check if the GPU present in Linux is AMD.
@@ -239,7 +237,7 @@ class Gpu(ProcessingUnit):
             
             return False
         except Exception as e:
-            raise Exception(f'Error checking for AMD graphics card:{e}')    
+            raise Exception(f'Error checking for AMD graphics card:{e}')   
     
     def __get_amd_power_on_linux(self) -> float:
         """" Returns the value of the AMD GPU power in W in Linux.
@@ -266,5 +264,5 @@ class Gpu(ProcessingUnit):
 
                             power /= 10**6
                             return power
-        except FileNotFoundError as e:
-            print('Error getting power from GPU: ', e.stderr.strip())
+        except (FileNotFoundError, PermissionError, ValueError) as e:
+            print('Error getting power from GPU: ', str(e))
