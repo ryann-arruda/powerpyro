@@ -19,6 +19,14 @@ if os.name == 'nt':
     from LibreHardwareMonitor.Hardware import Computer, HardwareType, SensorType
 
 class Gpu(ProcessingUnit):
+    """Represents a Graphics Processing Unit (GPU) responsible 
+       for accessing and retrieving power consumption values 
+       ​​from hardware sensors.
+
+    Attributes:
+        __manufacturer (GpuType): GPU  type.
+    """
+
     def __init__(self, operating_system: OsType):
         super().__init__(operating_system)
         self.__manufacturer: GpuType
@@ -28,7 +36,13 @@ class Gpu(ProcessingUnit):
 
         self._update_manufacture()
     
+    @property
     def get_manufacturer(self) -> GpuType:
+        """ The hardware manufacturer.
+
+        Returns:
+            GpuType: A type of GPU.
+        """
         return self.__manufacturer
     
     def __is_there_dedicated_gpu_windows(self) -> bool:
@@ -62,6 +76,11 @@ class Gpu(ProcessingUnit):
             raise OSError("Unable to identify operating system")
 
     def __update_manufacture_windows(self) -> None:
+        """Update hardware manufacturer when running on Windows OS.
+        
+        Raises:
+            IdentifyHardwareManufacturerException: If the hardware manufacturer cannot be identified.
+        """
 
         if not self.__is_there_dedicated_gpu_windows():
             raise ResourceUnavailableException("GPU", "Resource not found!")
