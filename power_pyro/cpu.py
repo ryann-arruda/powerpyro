@@ -19,6 +19,13 @@ if os.name == 'nt':
     from LibreHardwareMonitor.Hardware import HardwareType, SensorType
 
 class Cpu(ProcessingUnit):
+    """Represents a Central Processing Unit (CPU) responsible 
+       for accessing and retrieving power consumption values 
+       ​​from hardware sensors.
+
+    Attributes:
+        __manufacturer (CpuType): CPU  type.
+    """
     def __init__(self, operating_system: OsType):
         super().__init__(operating_system)
         self.__manufacturer: CpuType
@@ -28,7 +35,13 @@ class Cpu(ProcessingUnit):
         
         self._update_manufacture()
     
+    @property
     def get_manufacturer(self) -> CpuType:
+        """ The hardware manufacturer.
+
+        Returns:
+            GpuType: A type of CPU.
+        """
         return self.__manufacturer
 
     def _update_manufacture(self) -> None:
@@ -41,6 +54,11 @@ class Cpu(ProcessingUnit):
             raise OSError("Unable to identify operating system")
     
     def __update_manufacture_windows(self) -> None:
+        """Update hardware manufacturer when running on Windows OS.
+        
+        Raises:
+            IdentifyHardwareManufacturerException: If the hardware manufacturer cannot be identified.
+        """
         wmi_session = wmi.WMI()
 
         manufacturer = wmi_session.Win32_Processor()[0].Manufacturer
@@ -53,6 +71,11 @@ class Cpu(ProcessingUnit):
             raise IdentifyHardwareManufacturerException(HT.CPU)
 
     def __update_manufacture_linux(self) -> None:
+        """Update hardware manufacturer when running on Linux OS.
+        
+        Raises:
+            IdentifyHardwareManufacturerException: If the hardware manufacturer cannot be identified.
+        """
         info = cpuinfo.get_cpu_info()
 
         manufacturer = info['vendor_id_raw']
@@ -74,11 +97,17 @@ class Cpu(ProcessingUnit):
             raise OSError("Unable to identify operating system")
     
     def __update_hardware_name_windows(self) -> None:
+        """ Set the CPU name.
+
+        """
         wmi_session = wmi.WMI()
 
         self.set_name(wmi_session.Win32_Processor()[0].Name)
 
     def __update_hardware_name_linux(self) -> None:
+        """ Set the CPU name.
+        
+        """
         self.set_name(cpuinfo.get_cpu_info()['brand_raw'])
     
     def get_power(self) -> float:
@@ -90,6 +119,11 @@ class Cpu(ProcessingUnit):
             return self.__get_power_on_linux()
     
     def __get_power_on_linux(self) -> float:
+        """" Returns the value of the CPU power in W in Linux.
+
+        Returns:
+            float: CPU power.
+        """
         command = ["sudo", "perf", "stat", "-e", "power/energy-pkg/", "sleep", "0.1"]
         power = subprocess.run(command, capture_output=True, text=True)
 
@@ -107,6 +141,11 @@ class Cpu(ProcessingUnit):
         return power
 
     def __get_power_on_windows(self) -> float:
+        """" Returns the value of the CPU power in W in Windows.
+
+        Returns:
+            float: CPU power.
+        """
         cpu = next((hardware for hardware in self.get_computer().Hardware if hardware.HardwareType == HardwareType.Cpu), None)
         cpu.Update()
         time.sleep(0.1)
@@ -117,6 +156,11 @@ class Cpu(ProcessingUnit):
         return power
 
     def get_cpu_percent_for_process(self) -> float:
+        """" Returns the percentage value of the monitored process on the CPU.
+
+        Returns:
+            float: CPU percent.
+        """
         script_pid = os.getpid()
         sum_all = 0
         cpu_percent = 0
