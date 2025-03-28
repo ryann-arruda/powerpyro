@@ -2,6 +2,7 @@ from processing_unit import ProcessingUnit
 from cpu_type import CpuType
 from os_type import OsType
 from identify_hardware_manufacturer_exception import IdentifyHardwareManufacturerException
+from hardware_name_identify_exception import HardwareNameIdentifyException
 from hardware_type import HardwareType as HT
 
 import os
@@ -41,48 +42,58 @@ class Cpu(ProcessingUnit):
             raise OSError("Unable to identify operating system")
     
     def __update_manufacture_windows(self) -> None:
-        wmi_session = wmi.WMI()
+        try:
+            wmi_session = wmi.WMI()
 
-        manufacturer = wmi_session.Win32_Processor()[0].Manufacturer
+            manufacturer = wmi_session.Win32_Processor()[0].Manufacturer
 
-        if manufacturer == 'GenuineIntel':
-            self.__manufacturer = CpuType.INTEL
-        elif manufacturer == 'AuthenticAMD':
-            self.__manufacturer = CpuType.AMD
-        else:
+            if manufacturer == 'GenuineIntel':
+                self.__manufacturer = CpuType.INTEL
+            elif manufacturer == 'AuthenticAMD':
+                self.__manufacturer = CpuType.AMD
+            else:
+                raise IdentifyHardwareManufacturerException(HT.CPU)
+        except (ModuleNotFoundError, wmi.x_wmi, IndexError, AttributeError):
             raise IdentifyHardwareManufacturerException(HT.CPU)
 
     def __update_manufacture_linux(self) -> None:
-        info = cpuinfo.get_cpu_info()
+        try:
+            info = cpuinfo.get_cpu_info()
 
-        manufacturer = info['vendor_id_raw']
+            manufacturer = info['vendor_id_raw']
 
-        if manufacturer == 'GenuineIntel':
-            self.__manufacturer = CpuType.INTEL
-        elif manufacturer == 'AuthenticAMD':
-            self.__manufacturer = CpuType.AMD
-        else:
+            if manufacturer == 'GenuineIntel':
+                self.__manufacturer = CpuType.INTEL
+            elif manufacturer == 'AuthenticAMD':
+                self.__manufacturer = CpuType.AMD
+            else:
+                raise IdentifyHardwareManufacturerException(HT.CPU)
+        except (ModuleNotFoundError, KeyError):
             raise IdentifyHardwareManufacturerException(HT.CPU)
     
     def _update_hardware_name(self) -> None:
-        
         if self.get_operating_system() == OsType.WINDOWS:
             self.__update_hardware_name_windows()
         elif self.get_operating_system() == OsType.LINUX:
-            self.__update_hardware_name_linux
+            self.__update_hardware_name_linux()
         else:
             raise OSError("Unable to identify operating system")
     
     def __update_hardware_name_windows(self) -> None:
-        wmi_session = wmi.WMI()
+        try:
+            wmi_session = wmi.WMI()
 
-        self.set_name(wmi_session.Win32_Processor()[0].Name)
+            self.set_name(wmi_session.Win32_Processor()[0].Name)
+        except (ModuleNotFoundError, wmi.x_wmi, IndexError, AttributeError):
+            raise HardwareNameIdentifyException(HT.CPU)
 
     def __update_hardware_name_linux(self) -> None:
-        self.set_name(cpuinfo.get_cpu_info()['brand_raw'])
+        try:
+            self.set_name(cpuinfo.get_cpu_info()['brand_raw'])
+        except (ModuleNotFoundError, KeyError):
+            raise HardwareNameIdentifyException(HT.CPU)
     
     def get_power(self) -> float:
-
         if self.get_operating_system() == OsType.WINDOWS:
             return self.__get_power_on_windows()
 
@@ -90,19 +101,22 @@ class Cpu(ProcessingUnit):
             return self.__get_power_on_linux()
     
     def __get_power_on_linux(self) -> float:
-        command = ["sudo", "perf", "stat", "-e", "power/energy-pkg/", "sleep", "0.1"]
-        power = subprocess.run(command, capture_output=True, text=True)
+        try:
+            command = ["sudo", "perf", "stat", "-e", "power/energy-pkg/", "sleep", "0.1"]
+            power = subprocess.run(command, capture_output=True, text=True)
 
-        power = power.stderr.split(" ")
-        power = [string for string in power if string.strip()]
+            power = power.stderr.split(" ")
+            power = [string for string in power if string.strip()]
 
-        for index, string in enumerate(power):
-            if string.find('\n\n') != -1:
-                power = power[index + 1]
-                power = power.replace(",", ".")
-                break
-        
-        power = float(power)/0.1
+            for index, string in enumerate(power):
+                if string.find('\n\n') != -1:
+                    power = power[index + 1]
+                    power = power.replace(",", ".")
+                    break
+            
+            power = float(power)/0.1
+        except (PermissionError, subprocess.SubprocessError, AttributeError, IndexError, ValueError) as e:
+            print('Error getting power from CPU: ', str(e))
 
         return power
 
