@@ -8,12 +8,25 @@ import subprocess
 import re
 
 class Memory(HardwareComponent):
+    """Represents a Memory component responsible for calculating power consumption
+       based on the amount of memory used.
+
+    Attributes:
+        __WATT_PER_GB (float): Power consumption per GB of memory.
+    """
     def __init__(self, operating_system: OsType):
         super().__init__(operating_system)
         self.__WATT_PER_GB: float = self.__watt_per_gb()
     
     def __watt_per_gb(self) -> float:
+        """Calculates the power consumption per GB of memory.
 
+        Returns:
+            float: Power consumption per GB of memory.
+        
+        Raises:
+            OSError: If the operating system is not recognized.
+        """
         if self.get_operating_system() == OsType.WINDOWS:
             return self.__watt_per_gb_on_windows()
         elif self.get_operating_system() == OsType.LINUX:
@@ -22,6 +35,11 @@ class Memory(HardwareComponent):
             raise OSError("Unable to identify operating system")
 
     def __watt_per_gb_on_windows(self) -> float:
+        """Calculates the power consumption per GB of memory on Windows OS.
+
+        Returns:
+            float: Power consumption per GB.
+        """
         BYTES_TO_GIGABYTES = 1024**3
         wmi_session = wmi.WMI()
 
@@ -33,6 +51,11 @@ class Memory(HardwareComponent):
         return (5 * num_memory_modules)/gb_per_module        
     
     def __watt_per_gb_on_linux(self) -> float:
+        """Calculates the power consumption per GB of memory on Linux OS.
+
+        Returns:
+            float: Power consumption per GB.
+        """
         output = subprocess.check_output(["sudo", "dmidecode", "-t", "memory"], universal_newlines=True)
 
         num_memory_modules_found = len(re.findall(r"\tSize:", output))
@@ -48,6 +71,11 @@ class Memory(HardwareComponent):
         return (5 * num_memory_modules)/gb_per_module 
     
     def get_power(self) -> float:
+        """Returns the power consumption of the memory in watts.
+
+        Returns:
+            float: Memory power consumption.
+        """
         pid = os.getpid()
         process = psutil.Process(pid)
 
