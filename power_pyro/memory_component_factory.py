@@ -4,7 +4,11 @@ from hardware_component import HardwareComponent
 from memory import Memory
 
 class MemoryComponentFactory(HardwareComponentFactory):
+    """Factory class for creating Memory components.
     
+    This class implements the 'HardwareComponentFactory' to provide concrete Memory components
+    based on the specified operating system.
+    """
     def __init__(self):
         super().__init__()
 

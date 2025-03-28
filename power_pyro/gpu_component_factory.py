@@ -4,7 +4,11 @@ from hardware_component import HardwareComponent
 from gpu import Gpu
 
 class GpuComponentFactory(HardwareComponentFactory):
-
+    """Factory class for creating GPU components.
+    
+    This class implements the 'HardwareComponentFactory' to provide concrete GPU components
+    based on the specified operating system.
+    """
     def __init__(self):
         super().__init__()
     
