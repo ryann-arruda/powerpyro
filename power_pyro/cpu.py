@@ -105,9 +105,7 @@ class Cpu(ProcessingUnit):
             raise OSError("Unable to identify operating system")
     
     def __update_hardware_name_windows(self) -> None:
-        """ Set the CPU name.
-
-        """
+        """ Set the CPU name."""
         
         try:
             wmi_session = wmi.WMI()
@@ -117,9 +115,7 @@ class Cpu(ProcessingUnit):
             raise HardwareNameIdentifyException(HT.CPU)
 
     def __update_hardware_name_linux(self) -> None:
-        """ Set the CPU name.
-        
-        """
+        """ Set the CPU name."""
 
         try:
             self.set_name(cpuinfo.get_cpu_info()['brand_raw'])
@@ -165,12 +161,15 @@ class Cpu(ProcessingUnit):
         Returns:
             float: CPU power.
         """
-        cpu = next((hardware for hardware in self.get_computer().Hardware if hardware.HardwareType == HardwareType.Cpu), None)
-        cpu.Update()
-        time.sleep(0.1)
+        try:
+            cpu = next((hardware for hardware in self.get_computer().Hardware if hardware.HardwareType == HardwareType.Cpu), None)
+            cpu.Update()
+            time.sleep(0.1)
 
-        power = next((sensor for sensor in cpu.Sensors if sensor.SensorType == SensorType.Power and (sensor.Name == "CPU Package" or sensor.Name == "Package")))
-        power = power.Value
+            power = next((sensor for sensor in cpu.Sensors if sensor.SensorType == SensorType.Power and (sensor.Name == "CPU Package" or sensor.Name == "Package")))
+            power = power.Value
+        except AttributeError as e:
+            print('Error getting power from CPU: ', str(e))
 
         return power
 
