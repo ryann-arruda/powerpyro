@@ -21,6 +21,14 @@ class Monitor():
         self.__WATT_TO_KWH:float = 3_600_000
     
     def __get_operating_system(self) -> OsType:
+        """Determines the operating system type.
+        
+        Returns: 
+            The operating system type as OsType.
+
+        Raises: 
+            OSError: If the OS cannot be identified.
+        """
         if os.name == 'nt':
             return OsType.WINDOWS
         elif os.name == 'posix':
@@ -29,11 +37,32 @@ class Monitor():
             raise OSError("Unable to identify operating system")
 
     def __check_components(self, required_components: Dict[str, bool]) -> bool:
+        """Validates the required components keys.
+
+        Args:
+            required_components: Dictionary of required components.
+
+        Returns: 
+            bool:
+                - 'True' if all the dictionary keys are in the list, 
+                - 'False' otherwise.
+        """
         required_keys = ['cpu', 'gpu', 'memory']
 
         return len(required_components.keys()) <= len(required_keys) and all(key in required_keys for key in required_components)
     
     def __create_components(self, required_components: Dict[str, bool]) -> Dict[str, HardwareComponent]:
+        """Creates the required hardware components using the appropriate factories.
+
+        Args:
+            required_components: Dictionary indicating which components should be created.
+
+        Returns: 
+            components: Dictionary containing the created hardware components.
+
+        Raises:
+            InvalidKeysErrorException: If the required components contain invalid keys.
+        """
         if not self.__check_components(required_components):
             raise InvalidKeysErrorException()
 
@@ -54,12 +83,20 @@ class Monitor():
         return components
     
     def __close_resources(self) -> None:
+        """Closes resources allocated by the components.
+
+        """
         for component in self.__components:
             
             if hasattr(self.__components[component], 'close'):
                 self.__components[component].close()
     
     def get_energy_consumed_by_components(self) -> Dict[str, float]:
+        """Retrieves the total energy consumed by each hardware component.
+
+        Returns: 
+            energy_consumed_by_components: A dictionary where the keys are component names ('cpu', 'gpu', 'memory') and the values are the energy consumed by each component.
+        """
         energy_consumed_by_components: Dict[str, float] = {}
 
         if 'cpu' in self.__components:
@@ -77,9 +114,15 @@ class Monitor():
         return energy_consumed_by_components
     
     def get_total_energy_consumed(self) -> float:
+        """Retrieves the total energy consumed by all components monitored.
+        
+        """
         return self.__total_energy_consumed
 
     def __monitor(self) -> None:
+        """Monitors energy consumption of components at regular intervals.
+
+        """
 
         while not self.__stop_sign:
             start = time.time() 
