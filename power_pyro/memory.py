@@ -40,13 +40,16 @@ class Memory(HardwareComponent):
         Returns:
             float: Power consumption per GB.
         """
-        BYTES_TO_GIGABYTES = 1024**3
-        wmi_session = wmi.WMI()
+        try:
+            BYTES_TO_GIGABYTES = 1024**3
+            wmi_session = wmi.WMI()
 
-        num_memory_modules = len(wmi_session.Win32_PhysicalMemory())
+            num_memory_modules = len(wmi_session.Win32_PhysicalMemory())
 
-        memory_module = wmi_session.Win32_PhysicalMemory()[0]
-        gb_per_module = int(memory_module.Capacity)/BYTES_TO_GIGABYTES
+            memory_module = wmi_session.Win32_PhysicalMemory()[0]
+            gb_per_module = int(memory_module.Capacity)/BYTES_TO_GIGABYTES
+        except (ModuleNotFoundError, IndexError, TypeError, wmi.x_wmi) as e:
+            print('Error getting power from Memory: ', str(e))
 
         return (5 * num_memory_modules)/gb_per_module        
     
