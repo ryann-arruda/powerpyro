@@ -39,6 +39,9 @@ class Memory(HardwareComponent):
 
         Returns:
             float: Power consumption per GB.
+
+        Raises:
+            RuntimeError: Unable to get information from memory.
         """
         try:
             BYTES_TO_GIGABYTES = 1024**3
@@ -58,6 +61,9 @@ class Memory(HardwareComponent):
 
         Returns:
             float: Power consumption per GB.
+
+        Raises:
+            RuntimeError: Unable to get information from memory.
         """
         try:
             output = subprocess.check_output(["sudo", "dmidecode", "-t", "memory"], universal_newlines=True)
@@ -77,7 +83,7 @@ class Memory(HardwareComponent):
         return (5 * num_memory_modules)/gb_per_module 
     
     def get_power(self) -> float:
-        """Returns the power consumption of the memory in watts.
+        """Returns the power consumption of the memory in W.
 
         Returns:
             float: Memory power consumption.
