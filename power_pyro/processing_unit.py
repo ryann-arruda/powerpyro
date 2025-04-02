@@ -26,7 +26,7 @@ class ProcessingUnit(HardwareComponent):
             self.__computer: Computer = Computer()
 
     @property
-    def get_name(self) -> str:
+    def name(self) -> str:
         """Gets the name of the processing unit.
 
         Returns:
@@ -34,7 +34,7 @@ class ProcessingUnit(HardwareComponent):
         """
         return self.__name
     
-    @get_name.setter
+    @name.setter
     def set_name(self, name: str) -> None:
         """Sets the name of the processing unit.
         
@@ -44,7 +44,7 @@ class ProcessingUnit(HardwareComponent):
         self.__name = name
     
     @property
-    def get_computer(self) -> Computer:
+    def computer(self) -> Computer:
         """Gets the computer instance associated with the processing unit.
 
         Returns:
@@ -54,11 +54,13 @@ class ProcessingUnit(HardwareComponent):
     
     def open(self) -> None:
         """Opens the computer monitoring instance."""
-        self.__computer.Open()
+        if self.get_operating_system() == OsType.WINDOWS:
+            self.__computer.Open()
     
     def close(self) -> None:
         """Closes the computer monitoring instance."""
-        self.__computer.Close()
+        if self.get_operating_system() == OsType.WINDOWS:
+            self.__computer.Close()
     
     @abstractmethod
     def _update_manufacture(self) -> None:
