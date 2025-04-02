@@ -15,7 +15,7 @@ if os.name == 'nt':
 class ProcessingUnit(HardwareComponent):
     """Abstract base class representing a processing unit.
     
-    This class extends `HardwareComponent` and provides common functionality
+    This class extends 'HardwareComponent' and provides common functionality
     for processing units, including name management and computer interaction.
     """
     def __init__(self, operating_system: OsType):
