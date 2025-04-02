@@ -4,6 +4,7 @@ from os_type import OsType
 import clr
 import os
 from abc import abstractmethod
+from typing import Union
 
 if os.name == 'nt':
 
@@ -44,13 +45,17 @@ class ProcessingUnit(HardwareComponent):
         self.__name = name
     
     @property
-    def computer(self) -> Computer:
+    def computer(self) -> Union[Computer, None]:
         """Gets the computer instance associated with the processing unit.
 
         Returns:
-            Computer: The computer instance.
+            Union[Computer, None]: Gets the computer instance associated with 
+                                   the processing unit, or None if not on Windows OS.
         """
-        return self.__computer
+        if self.get_operating_system() == OsType.WINDOWS:
+            return self.__computer
+        
+        return None
     
     def open(self) -> None:
         """Opens the computer monitoring instance."""
