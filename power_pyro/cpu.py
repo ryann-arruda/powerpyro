@@ -58,7 +58,8 @@ class Cpu(ProcessingUnit):
         """Update hardware manufacturer when running on Windows OS.
         
         Raises:
-            IdentifyHardwareManufacturerException: If the hardware manufacturer cannot be identified.
+            IdentifyHardwareManufacturerException: If the hardware manufacturer
+            cannot be identified.
         """
 
         try:
@@ -79,7 +80,8 @@ class Cpu(ProcessingUnit):
         """Update hardware manufacturer when running on Linux OS.
         
         Raises:
-            IdentifyHardwareManufacturerException: If the hardware manufacturer cannot be identified.
+            IdentifyHardwareManufacturerException: If the hardware manufacturer 
+            cannot be identified.
         """
         
         try:
@@ -105,7 +107,11 @@ class Cpu(ProcessingUnit):
             raise OSError("Unable to identify operating system")
     
     def __update_hardware_name_windows(self) -> None:
-        """ Set the CPU name."""
+        """ Set the CPU name.
+        
+        Raises:
+            HardwareNameIdentifyException: Unable to identify CPU name in Windows.
+        """
         
         try:
             wmi_session = wmi.WMI()
@@ -115,7 +121,11 @@ class Cpu(ProcessingUnit):
             raise HardwareNameIdentifyException(HT.CPU)
 
     def __update_hardware_name_linux(self) -> None:
-        """ Set the CPU name."""
+        """ Set the CPU name.
+        
+        Raises:
+            HardwareNameIdentifyException: Unable to identify CPU name in Linux.
+        """
 
         try:
             self.set_name(cpuinfo.get_cpu_info()['brand_raw'])

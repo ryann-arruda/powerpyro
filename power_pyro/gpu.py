@@ -85,7 +85,10 @@ class Gpu(ProcessingUnit):
         """Update hardware manufacturer when running on Windows OS.
         
         Raises:
-            IdentifyHardwareManufacturerException: If the hardware manufacturer cannot be identified.
+            IdentifyHardwareManufacturerException: If the hardware manufacturer 
+            cannot be identified.
+
+            ResourceUnavailableException: If a dedicated GPU is not found in Windows.
         """
         if not self.__is_there_dedicated_gpu_windows():
             raise ResourceUnavailableException("GPU", "Resource not found!")
@@ -110,7 +113,8 @@ class Gpu(ProcessingUnit):
         """Update hardware manufacturer when running on Linux OS.
         
         Raises:
-            IdentifyHardwareManufacturerException: If the hardware manufacturer cannot be identified.
+            IdentifyHardwareManufacturerException: If the hardware manufacturer
+            cannot be identified.
         """
 
         if self.__is_there_nvidia_on_linux():
@@ -132,7 +136,7 @@ class Gpu(ProcessingUnit):
         """ Set the GPU name.
         
         Raises:
-             ResourceUnavailableException: If a dedicated GPU is not found in Windows.
+            ResourceUnavailableException: If a dedicated GPU is not found in Windows.
         """
         if not self.__is_there_dedicated_gpu_windows():
             raise ResourceUnavailableException("GPU", "Resource not found!")
@@ -150,7 +154,7 @@ class Gpu(ProcessingUnit):
         """ Set the GPU name.
         
         Raises:
-             HardwareNameIdentifyException: Unable to identify GPU name in Linux.
+            HardwareNameIdentifyException: Unable to identify GPU name in Linux.
         """
         try:
             if self.__is_there_nvidia_on_linux():
@@ -227,6 +231,9 @@ class Gpu(ProcessingUnit):
             bool: 
                 - 'True' if you have AMD GPU on Linux.
                 - 'False' if you don't have AMD GPU on Linux.
+
+        Raises:
+            Exception: Error when checking AMD dedicated video card on Linux.
         """
         try:
             result = subprocess.check_output(['lspci', '-nnk'], universal_newlines=True)
