@@ -49,7 +49,7 @@ class Memory(HardwareComponent):
             memory_module = wmi_session.Win32_PhysicalMemory()[0]
             gb_per_module = int(memory_module.Capacity)/BYTES_TO_GIGABYTES
         except (ModuleNotFoundError, IndexError, TypeError, wmi.x_wmi) as e:
-            print('Error getting power from Memory: ', str(e))
+            print('Error getting memory power in Windows.: ', str(e))
 
         return (5 * num_memory_modules)/gb_per_module        
     
@@ -59,17 +59,20 @@ class Memory(HardwareComponent):
         Returns:
             float: Power consumption per GB.
         """
-        output = subprocess.check_output(["sudo", "dmidecode", "-t", "memory"], universal_newlines=True)
+        try:
+            output = subprocess.check_output(["sudo", "dmidecode", "-t", "memory"], universal_newlines=True)
 
-        num_memory_modules_found = len(re.findall(r"\tSize:", output))
-        number_unused_memory_modules = len(re.findall(r"Size: No Module Installed", output))
+            num_memory_modules_found = len(re.findall(r"\tSize:", output))
+            number_unused_memory_modules = len(re.findall(r"Size: No Module Installed", output))
 
-        num_memory_modules = num_memory_modules_found - number_unused_memory_modules
-        
-        gb_per_module = re.findall(r"\tSize: \d+ \w+", output)
-        gb_per_module = gb_per_module[0].split(": ")
-        gb_per_module = gb_per_module[1].split(" ")
-        gb_per_module = int(gb_per_module[0])
+            num_memory_modules = num_memory_modules_found - number_unused_memory_modules
+            
+            gb_per_module = re.findall(r"\tSize: \d+ \w+", output)
+            gb_per_module = gb_per_module[0].split(": ")
+            gb_per_module = gb_per_module[1].split(" ")
+            gb_per_module = int(gb_per_module[0])
+        except (FileNotFoundError, PermissionError, subprocess.CalledProcessError, IndexError, ValueError) as e:
+            print('Error getting memory power in Linux.: ', str(e))
 
         return (5 * num_memory_modules)/gb_per_module 
     
