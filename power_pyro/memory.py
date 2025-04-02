@@ -48,8 +48,8 @@ class Memory(HardwareComponent):
 
             memory_module = wmi_session.Win32_PhysicalMemory()[0]
             gb_per_module = int(memory_module.Capacity)/BYTES_TO_GIGABYTES
-        except (ModuleNotFoundError, IndexError, TypeError, wmi.x_wmi) as e:
-            print('Error getting memory power in Windows.: ', str(e))
+        except (ModuleNotFoundError, IndexError, TypeError, wmi.x_wmi):
+            raise RuntimeError("Unable to get watts per GB information from memory")
 
         return (5 * num_memory_modules)/gb_per_module        
     
@@ -71,8 +71,8 @@ class Memory(HardwareComponent):
             gb_per_module = gb_per_module[0].split(": ")
             gb_per_module = gb_per_module[1].split(" ")
             gb_per_module = int(gb_per_module[0])
-        except (FileNotFoundError, PermissionError, subprocess.CalledProcessError, IndexError, ValueError) as e:
-            print('Error getting memory power in Linux.: ', str(e))
+        except (FileNotFoundError, PermissionError, subprocess.CalledProcessError, IndexError, ValueError):
+            raise RuntimeError("Unable to get watts per GB information from memory")
 
         return (5 * num_memory_modules)/gb_per_module 
     
@@ -82,11 +82,14 @@ class Memory(HardwareComponent):
         Returns:
             float: Memory power consumption.
         """
-        pid = os.getpid()
-        process = psutil.Process(pid)
+        try:
+            pid = os.getpid()
+            process = psutil.Process(pid)
 
-        power = process.memory_info().rss
-        power /= (1024 ** 3)
-        power *= self.__WATT_PER_GB
+            power = process.memory_info().rss
+            power /= (1024 ** 3)
+            power *= self.__WATT_PER_GB
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
+            print('Error getting power from memory:', str(e))
         
         return power
