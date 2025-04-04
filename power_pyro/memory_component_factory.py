@@ -2,6 +2,7 @@ from hardware_component_factory import HardwareComponentFactory
 from os_type import OsType
 from hardware_component import HardwareComponent
 from memory import Memory
+from object_creation_exception import ObjectCreationException
 
 class MemoryComponentFactory(HardwareComponentFactory):
     """Factory class for creating Memory components.
@@ -13,4 +14,7 @@ class MemoryComponentFactory(HardwareComponentFactory):
         super().__init__()
 
     def create_component(self, operating_system: OsType) -> HardwareComponent:
-        return Memory(operating_system)
+        try:
+            return Memory(operating_system)
+        except OSError as e:
+            raise ObjectCreationException(additional_info = str(e))
