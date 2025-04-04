@@ -73,10 +73,10 @@ class Gpu(ProcessingUnit):
         return False
     
     def _update_manufacture(self) -> None:
-        if self.get_operating_system() == OsType.WINDOWS:
+        if self.operating_system() == OsType.WINDOWS:
             self.__update_manufacture_windows()
         
-        elif self.get_operating_system() == OsType.LINUX:
+        elif self.operating_system() == OsType.LINUX:
             self.__update_manufacture_linux()
         else:
             raise OSError("Unable to identify operating system")
@@ -125,9 +125,9 @@ class Gpu(ProcessingUnit):
             raise IdentifyHardwareManufacturerException(HT.GPU)
     
     def _update_hardware_name(self) -> None:
-        if self.get_operating_system() == OsType.WINDOWS:
+        if self.operating_system() == OsType.WINDOWS:
             self.__update_hardware_name_windows()
-        elif self.get_operating_system() == OsType.LINUX:
+        elif self.operating_system() == OsType.LINUX:
             self.__update_hardware_name_linux
         else:
             raise OSError("Unable to identify operating system")
@@ -168,7 +168,7 @@ class Gpu(ProcessingUnit):
             raise HardwareNameIdentifyException(HT.GPU)
     
     def get_power(self) -> float:
-        if self.get_operating_system() == OsType.WINDOWS:
+        if self.operating_system() == OsType.WINDOWS:
             return self.__get_power_on_windows()
 
         else:
