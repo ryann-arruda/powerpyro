@@ -31,7 +31,7 @@ class Cpu(ProcessingUnit):
         super().__init__(operating_system)
         self.__manufacturer: CpuType
 
-        if self.operating_system() == OsType.WINDOWS:
+        if operating_system == OsType.WINDOWS:
             self.get_computer().IsCpuEnabled = True
         
         self._update_manufacture()
