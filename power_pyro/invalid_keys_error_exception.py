@@ -1,5 +1,3 @@
-from typing import Dict
-
 class InvalidKeysErrorException(Exception):
     """Exception raised when the provided keys do not match the expected ones.
 
