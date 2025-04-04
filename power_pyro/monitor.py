@@ -83,9 +83,7 @@ class Monitor():
         return components
     
     def __close_resources(self) -> None:
-        """Closes resources allocated by the components.
-
-        """
+        """Closes resources allocated by the components."""
         for component in self.__components:
             
             if hasattr(self.__components[component], 'close'):
@@ -114,15 +112,11 @@ class Monitor():
         return energy_consumed_by_components
     
     def get_total_energy_consumed(self) -> float:
-        """Retrieves the total energy consumed by all components monitored.
-        
-        """
+        """Retrieves the total energy consumed by all components monitored."""
         return self.__total_energy_consumed
 
     def __monitor(self) -> None:
-        """Monitors energy consumption of components at regular intervals.
-
-        """
+        """Monitors energy consumption of components at regular intervals."""
 
         while not self.__stop_sign:
             start = time.time() 
