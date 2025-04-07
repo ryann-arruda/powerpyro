@@ -98,16 +98,16 @@ class Monitor():
         energy_consumed_by_components: Dict[str, float] = {}
 
         if 'cpu' in self.__components:
-            energy_consumed_by_components['cpu'] = self.__components['cpu'].total_energy_consumed()
+            energy_consumed_by_components['cpu'] = self.__components['cpu'].total_energy_consumed
 
             if 'gpu' in self.__components:
-                energy_consumed_by_components['gpu'] = self.__components['gpu'].total_energy_consumed()
+                energy_consumed_by_components['gpu'] = self.__components['gpu'].total_energy_consumed
 
                 if 'memory' in self.__components:
-                    energy_consumed_by_components['memory'] = self.__components['memory'].total_energy_consumed()
+                    energy_consumed_by_components['memory'] = self.__components['memory'].total_energy_consumed
             
             if 'memory' in self.__components:
-                energy_consumed_by_components['memory'] = self.__components['memory'].total_energy_consumed()
+                energy_consumed_by_components['memory'] = self.__components['memory'].total_energy_consumed
         
         return energy_consumed_by_components
     
