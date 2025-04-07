@@ -52,19 +52,19 @@ class ProcessingUnit(HardwareComponent):
             Union[Computer, None]: Gets the computer instance associated with 
                                    the processing unit, or None if not on Windows OS.
         """
-        if self.get_operating_system() == OsType.WINDOWS:
+        if self.operating_system() == OsType.WINDOWS:
             return self.__computer
         
         return None
     
     def open(self) -> None:
         """Opens the computer monitoring instance."""
-        if self.get_operating_system() == OsType.WINDOWS:
+        if self.operating_system() == OsType.WINDOWS:
             self.__computer.Open()
     
     def close(self) -> None:
         """Closes the computer monitoring instance."""
-        if self.get_operating_system() == OsType.WINDOWS:
+        if self.operating_system() == OsType.WINDOWS:
             self.__computer.Close()
     
     @abstractmethod
