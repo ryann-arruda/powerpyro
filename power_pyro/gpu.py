@@ -32,7 +32,7 @@ class Gpu(ProcessingUnit):
         self.__manufacturer: GpuType
 
         if operating_system == OsType.WINDOWS:
-            self.get_computer().IsGpuEnabled = True        
+            self.computer().IsGpuEnabled = True        
 
         self._update_manufacture()
     
@@ -183,7 +183,7 @@ class Gpu(ProcessingUnit):
         Returns:
             float: GPU power.
         """
-        gpu = next((hardware for hardware in self.get_computer().Hardware if (hardware.HardwareType == HardwareType.GpuIntel or
+        gpu = next((hardware for hardware in self.computer().Hardware if (hardware.HardwareType == HardwareType.GpuIntel or
                                                                         hardware.HardwareType == HardwareType.GpuAmd or
                                                                         hardware.HardwareType == HardwareType.GpuNvidia)), None)
         gpu.Update()
