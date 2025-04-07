@@ -27,9 +27,9 @@ class Memory(HardwareComponent):
         Raises:
             OSError: If the operating system is not recognized.
         """
-        if self.get_operating_system() == OsType.WINDOWS:
+        if self.operating_system == OsType.WINDOWS:
             return self.__watt_per_gb_on_windows()
-        elif self.get_operating_system() == OsType.LINUX:
+        elif self.operating_system == OsType.LINUX:
             return self.__watt_per_gb_on_linux()
         else:
             raise OSError("Unable to identify operating system")
