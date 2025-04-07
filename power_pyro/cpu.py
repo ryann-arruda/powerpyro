@@ -46,10 +46,10 @@ class Cpu(ProcessingUnit):
         return self.__manufacturer
 
     def _update_manufacture(self) -> None:
-        if self.operating_system() == OsType.WINDOWS:
+        if self.operating_system == OsType.WINDOWS:
             self.__update_manufacture_windows()
         
-        elif self.operating_system() == OsType.LINUX:
+        elif self.operating_system == OsType.LINUX:
             self.__update_manufacture_linux()
         else:
             raise OSError("Unable to identify operating system")
@@ -99,9 +99,9 @@ class Cpu(ProcessingUnit):
             raise IdentifyHardwareManufacturerException(HT.CPU)
     
     def _update_hardware_name(self) -> None:
-        if self.operating_system() == OsType.WINDOWS:
+        if self.operating_system == OsType.WINDOWS:
             self.__update_hardware_name_windows()
-        elif self.operating_system() == OsType.LINUX:
+        elif self.operating_system == OsType.LINUX:
             self.__update_hardware_name_linux()
         else:
             raise OSError("Unable to identify operating system")
@@ -133,7 +133,7 @@ class Cpu(ProcessingUnit):
             raise HardwareNameIdentifyException(HT.CPU)
     
     def get_power(self) -> float:
-        if self.operating_system() == OsType.WINDOWS:
+        if self.operating_system == OsType.WINDOWS:
             return self.__get_power_on_windows()
 
         else:
