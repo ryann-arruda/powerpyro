@@ -32,7 +32,7 @@ class Cpu(ProcessingUnit):
         self.__manufacturer: CpuType
 
         if operating_system == OsType.WINDOWS:
-            self.computer().IsCpuEnabled = True
+            self.computer.IsCpuEnabled = True
         
         self._update_manufacture()
     
@@ -172,7 +172,7 @@ class Cpu(ProcessingUnit):
             float: CPU power.
         """
         try:
-            cpu = next((hardware for hardware in self.computer().Hardware if hardware.HardwareType == HardwareType.Cpu), None)
+            cpu = next((hardware for hardware in self.computer.Hardware if hardware.HardwareType == HardwareType.Cpu), None)
             cpu.Update()
             time.sleep(0.1)
 
