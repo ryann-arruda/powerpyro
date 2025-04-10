@@ -1,5 +1,6 @@
-from abc import ABC, abstractmethod
 from os_type import OsType
+
+from abc import ABC, abstractmethod
 
 class HardwareComponent(ABC):
     """Abstract base class representing a hardware component.
