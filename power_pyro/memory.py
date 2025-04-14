@@ -3,9 +3,12 @@ from os_type import OsType
 
 import os
 import psutil
-import wmi
 import subprocess
 import re
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import wmi
 
 class Memory(HardwareComponent):
     """Represents a Memory component responsible for calculating power consumption
