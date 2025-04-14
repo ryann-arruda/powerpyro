@@ -5,9 +5,8 @@ import os
 import psutil
 import subprocess
 import re
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
+if os.name == 'nt':
     import wmi
 
 class Memory(HardwareComponent):

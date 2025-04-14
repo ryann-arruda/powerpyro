@@ -10,17 +10,18 @@ import cpuinfo
 import subprocess
 import time
 import psutil
+import clr
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import clr
-    import wmi
 
 if os.name == 'nt':
 
     #clr.AddReference(r"C:\Users\Alexa\OneDrive\Área de Trabalho\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
     clr.AddReference(r"C:\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
     from LibreHardwareMonitor.Hardware import HardwareType, SensorType
+    import wmi
 
 class Cpu(ProcessingUnit):
     """Represents a Central Processing Unit (CPU) responsible 
