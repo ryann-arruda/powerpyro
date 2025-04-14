@@ -4,7 +4,10 @@ from os_type import OsType
 import clr
 import os
 from abc import abstractmethod
-from typing import Union
+from typing import Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from LibreHardwareMonitor.Hardware import Computer
 
 if os.name == 'nt':
 
@@ -24,7 +27,7 @@ class ProcessingUnit(HardwareComponent):
         self.__name: str = None
 
         if operating_system == OsType.WINDOWS:
-            self.__computer: Computer = Computer()
+            self.__computer: "Computer" = Computer()
 
     @property
     def name(self) -> str:
@@ -45,7 +48,7 @@ class ProcessingUnit(HardwareComponent):
         self.__name = name
     
     @property
-    def computer(self) -> Union[Computer, None]:
+    def computer(self) -> Union["Computer", None]:
         """Gets the computer instance associated with the processing unit.
 
         Returns:
