@@ -14,6 +14,20 @@ class MemoryComponentFactory(HardwareComponentFactory):
         super().__init__()
 
     def create_component(self, operating_system: OsType) -> HardwareComponent:
+        """Creates a memory hardware component based on the provided operating system.
+
+            Args:
+                operating_system (OsType): The type of operating system for 
+                which the memory component will be created.
+
+            Returns:
+                HardwareComponent: An instance of the memory component 
+                corresponding to the given operating system.
+
+            Raises:
+                ObjectCreationException: If an OS-level error occurs during 
+                memory component creation.
+    """
         try:
             return Memory(operating_system)
         except OSError as e:

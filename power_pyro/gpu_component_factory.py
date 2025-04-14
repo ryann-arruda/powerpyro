@@ -15,6 +15,20 @@ class GpuComponentFactory(HardwareComponentFactory):
         super().__init__()
     
     def create_component(self, operating_system: OsType) -> HardwareComponent:
+        """Creates a GPU hardware component based on the provided operating system.
+
+            Args:
+                operating_system (OsType): The type of operating system for 
+                which the GPU component will be created.
+
+            Returns:
+                HardwareComponent: An instance of the GPU component 
+                corresponding to the given operating system.
+
+            Raises:
+                ObjectCreationException: If an error occurs while 
+                identifying the hardware manufacturer.
+        """
         try:
             return Gpu(operating_system)
         except IdentifyHardwareManufacturerException as e:
