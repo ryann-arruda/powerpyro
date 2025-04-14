@@ -6,12 +6,15 @@ from hardware_name_identify_exception import HardwareNameIdentifyException
 from hardware_type import HardwareType as HT
 
 import os
-import clr
-import wmi
 import cpuinfo
 import subprocess
 import time
 import psutil
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import clr
+    import wmi
 
 if os.name == 'nt':
 
