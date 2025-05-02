@@ -15,7 +15,6 @@ class Monitor():
     def __init__(self, required_components: Dict[str, bool]):
         self.__operating_system: OsType = self.__get_operating_system()
         self.__components: Dict[str, HardwareComponent] = self.__create_components(required_components)
-        self.__total_energy_consumed: float
         self.__stop_sign: bool = False
         self.__thread:Thread = Thread(target=self.__monitor)
         self.__WATT_TO_KWH:float = 3_600_000
@@ -111,9 +110,15 @@ class Monitor():
         
         return energy_consumed_by_components
     
-    def get_total_energy_consumed(self) -> float:
+    def total_energy_consumed(self) -> float:
         """Retrieves the total energy consumed by all components monitored."""
-        return self.__total_energy_consumed
+
+        total_energy_consumed: float = 0.0
+
+        for component in self.__components:
+            total_energy_consumed += self.__components[component].total_energy_consumed
+
+        return total_energy_consumed
 
     def __monitor(self) -> None:
         """Monitors energy consumption of components at regular intervals."""
