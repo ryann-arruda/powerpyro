@@ -12,7 +12,34 @@ import os
 from threading import Thread
 
 class Monitor():
+    """
+    Class responsible for monitoring the energy consumption of 
+    selected hardware components 
+    (CPU, GPU, and memory) in a system.
+
+    Attributes:
+        __operating_system (OsType): The current operating system.
+        __components (Dict[str, HardwareComponent]): Dictionary of initialized 
+        hardware components.
+        __stop_sign (bool): Flag to stop the monitoring loop.
+        __thread (Thread): Thread in which monitoring occurs.
+        __WATT_TO_KWH (float): Constant to convert energy from 
+        watts to kilowatt-hours.
+    """
     def __init__(self, required_components: Dict[str, bool]):
+        """
+        Initializes the Monitor class by setting up the operating system, 
+        validating required components, creating component instances,
+        and preparing the monitoring thread.
+
+        Args:
+            required_components (Dict[str, bool]): Dictionary specifying which 
+            components ('cpu', 'gpu', 'memory') should be monitored.
+        
+        Raises:
+            InvalidKeysErrorException: If any invalid keys are found in 
+            the provided dictionary.
+        """
         self.__operating_system: OsType = self.__get_operating_system()
         self.__components: Dict[str, HardwareComponent] = self.__create_components(required_components)
         self.__stop_sign: bool = False
@@ -148,8 +175,14 @@ class Monitor():
             self.__close_resources()
     
     def start(self) -> None:
+        """
+        Starts the monitoring process in a separate thread.
+        """
         self.__thread.start()
     
     def end(self) -> None:
+        """
+        Stops the monitoring process and waits for the monitoring thread to finish.
+        """
         self.__stop_sign = True
         self.__thread.join()
