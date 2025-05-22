@@ -39,6 +39,7 @@ class Cpu(ProcessingUnit):
             self.computer.IsCpuEnabled = True
         
         self._update_manufacture()
+        self._update_hardware_name()
     
     @property
     def get_manufacturer(self) -> CpuType:
@@ -120,7 +121,7 @@ class Cpu(ProcessingUnit):
         try:
             wmi_session = wmi.WMI()
 
-            self.set_name(wmi_session.Win32_Processor()[0].Name)
+            self.set_name = wmi_session.Win32_Processor()[0].Name
         except (ModuleNotFoundError, wmi.x_wmi, IndexError, AttributeError):
             raise HardwareNameIdentifyException(HT.CPU)
 
@@ -132,7 +133,7 @@ class Cpu(ProcessingUnit):
         """
 
         try:
-            self.set_name(cpuinfo.get_cpu_info()['brand_raw'])
+            self.set_name = cpuinfo.get_cpu_info()['brand_raw']
         except (ModuleNotFoundError, KeyError):
             raise HardwareNameIdentifyException(HT.CPU)
     

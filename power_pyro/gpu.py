@@ -35,6 +35,7 @@ class Gpu(ProcessingUnit):
             self.computer.IsGpuEnabled = True        
 
         self._update_manufacture()
+        self._update_hardware_name()
     
     @property
     def get_manufacturer(self) -> GpuType:
@@ -146,7 +147,7 @@ class Gpu(ProcessingUnit):
         computer.IsGpuEnabled = True
 
         for hardware in computer.Hardware:
-            self.set_name(hardware.Name)
+            self.set_name = hardware.Name
         
         computer.Close()
     
@@ -158,10 +159,10 @@ class Gpu(ProcessingUnit):
         """
         try:
             if self.__is_there_nvidia_on_linux():
-                self.set_name(subprocess.check_output("nvidia-smi --query-gpu=name --format=csv,noheader", shell=True).decode().strip())
+                self.set_name = subprocess.check_output("nvidia-smi --query-gpu=name --format=csv,noheader", shell=True).decode().strip()
             elif self.__is_there_amd_on_linux():
                 output = subprocess.check_output("lspci | grep -i vga", shell=True).decode().strip()
-                self.set_name(re.findall(r'\w+ \w+ \w+ \w+ / \w+ \w+\W\w+', output))
+                self.set_name = re.findall(r'\w+ \w+ \w+ \w+ / \w+ \w+\W\w+', output)
             else:
                 raise HardwareNameIdentifyException(HT.GPU)
         except (FileNotFoundError, subprocess.CalledProcessError, UnicodeDecodeError):
