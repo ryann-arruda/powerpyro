@@ -1,10 +1,10 @@
-from hardware_component import HardwareComponent
-from invalid_keys_error_exception import InvalidKeysErrorException
-from hardware_component_factory import HardwareComponentFactory
-from cpu_component_factory import CpuComponentFactory
-from gpu_component_factory import GpuComponentFactory
-from memory_component_factory import MemoryComponentFactory
-from os_type import OsType
+from .hardware_component import HardwareComponent
+from .invalid_keys_error_exception import InvalidKeysErrorException
+from .hardware_component_factory import HardwareComponentFactory
+from .cpu_component_factory import CpuComponentFactory
+from .gpu_component_factory import GpuComponentFactory
+from .memory_component_factory import MemoryComponentFactory
+from .os_type import OsType
 
 from typing import Dict
 import time
@@ -61,6 +61,19 @@ class Monitor():
             return OsType.LINUX
         else:
             raise OSError("Unable to identify operating system")
+    
+    def get_monitored_components(self) -> Dict[str, bool]:
+        """Retrieves the components to be monitored.
+        
+        Returns: 
+            A dictionary with the monitoring status of the components.
+        """
+        monitored_components = {'cpu': False, 'gpu': False, 'memory': False}
+        
+        for key in self.__components.keys():
+            monitored_components[key] = True
+        
+        return monitored_components
 
     def __check_components(self, required_components: Dict[str, bool]) -> bool:
         """Validates the required components keys.
