@@ -6,7 +6,7 @@ from .gpu_component_factory import GpuComponentFactory
 from .memory_component_factory import MemoryComponentFactory
 from .os_type import OsType
 
-from typing import Dict
+from typing import Dict, Any
 import time
 import os
 from threading import Thread
@@ -39,6 +39,31 @@ class Monitor():
         Raises:
             InvalidKeysErrorException: If any invalid keys are found in 
             the provided dictionary.
+
+        Example:
+            Basic usage monitoring only CPU:
+
+            ```python
+            from power_pyro import Monitor
+
+            monitor = Monitor({'cpu': True, 'gpu': False, 'memory': False})
+            ```
+
+            Monitoring CPU and GPU:
+
+            ```python
+            from power_pyro import Monitor
+
+            monitor = Monitor({'cpu': True, 'gpu': True, 'memory': False})
+            ```
+
+            Monitoring all components:
+
+            ```python
+            from power_pyro import Monitor
+
+            monitor = Monitor({'cpu': True, 'gpu': True, 'memory': True})
+            ```
         """
         self.__operating_system: OsType = self.__get_operating_system()
         self.__components: Dict[str, HardwareComponent] = self.__create_components(required_components)
@@ -62,16 +87,34 @@ class Monitor():
         else:
             raise OSError("Unable to identify operating system")
     
-    def get_monitored_components(self) -> Dict[str, bool]:
+    def get_monitored_components(self) -> Dict[str, Any]:
         """Retrieves the components to be monitored.
         
         Returns: 
-            A dictionary with the monitoring status of the components.
+            A dictionary with the monitoring status of the components 
+            and the components themselves.
+
+        Example:
+            Example retrieving monitored components:
+
+            ```python
+            from power_pyro import Monitor
+
+            # Monitor only CPU and GPU
+            monitor = Monitor({'cpu': True, 'gpu': True, 'memory': False})
+            components = monitor.get_monitored_components()
+
+            print(components)
+            # Output: {'cpu': True, 'gpu': True, 'memory': False}
+            ```
         """
-        monitored_components = {'cpu': False, 'gpu': False, 'memory': False}
-        
+        monitored_components:Dict[str, Any] = {'cpu': {'component': None, 'monitored': False}, 
+                                               'gpu': {'component': None, 'monitored': False}, 
+                                               'memory': {'component': None, 'monitored': False}}
+
         for key in self.__components.keys():
-            monitored_components[key] = True
+            monitored_components[key]['component'] = self.__components[key]
+            monitored_components[key]['monitored'] = True
         
         return monitored_components
 
@@ -133,6 +176,13 @@ class Monitor():
 
         Returns: 
             energy_consumed_by_components: A dictionary where the keys are component names ('cpu', 'gpu', 'memory') and the values are the energy consumed by each component.
+
+        Example:
+            ```python
+            monitor = Monitor({'cpu': True, 'gpu': False})
+            result = monitor.get_energy_consumed_by_components()
+            print(result)  # {'cpu': 2.5}
+            ```
         """
         energy_consumed_by_components: Dict[str, float] = {}
 
@@ -151,7 +201,24 @@ class Monitor():
         return energy_consumed_by_components
     
     def total_energy_consumed(self) -> float:
-        """Retrieves the total energy consumed by all components monitored."""
+        """Retrieves the total energy consumed by all components monitored.
+        
+        Example:
+            Get total energy consumption after monitoring:
+
+            ```python
+            from power_pyro import Monitor
+
+            monitor = Monitor({'cpu': True, 'gpu': True, 'memory': False})
+            monitor.start()
+            # ... perform operations ...
+            monitor.end()
+            
+            total_energy = monitor.total_energy_consumed()
+            print(f"Total energy consumed: {total_energy:.2f} Wh")
+            ```
+        
+        """
 
         total_energy_consumed: float = 0.0
 
@@ -190,12 +257,34 @@ class Monitor():
     def start(self) -> None:
         """
         Starts the monitoring process in a separate thread.
+
+        Example:
+            Start the monitoring process:
+
+            ```python
+            from power_pyro import Monitor
+
+            monitor = Monitor({'cpu': True, 'gpu': False, 'memory': True})
+            monitor.start()
+            ```
         """
         self.__thread.start()
     
     def end(self) -> None:
         """
         Stops the monitoring process and waits for the monitoring thread to finish.
+
+        Example:
+            Stop the monitoring process:
+
+            ```python
+            from power_pyro import Monitor
+
+            monitor = Monitor({'cpu': True, 'gpu': False, 'memory': True})
+            monitor.start()
+            # ... perform operations to monitor ...
+            monitor.end()  # Stops monitoring and waits for thread to finish
+            ```
         """
         self.__stop_sign = True
         self.__thread.join()

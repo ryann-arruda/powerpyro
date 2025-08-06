@@ -1,5 +1,5 @@
-from hardware_component import HardwareComponent
-from os_type import OsType
+from .hardware_component import HardwareComponent
+from .os_type import OsType
 
 import os
 import psutil
@@ -89,6 +89,18 @@ class Memory(HardwareComponent):
 
         Returns:
             float: Memory power consumption.
+
+        Example:
+            Monitor and print memory power consumption:
+
+            ```python
+            from power_pyro import Monitor
+
+            monitor = Monitor({'memory': True})  # Enable memory monitoring
+            power = monitor.memory.get_power()  # Access memory subsystem
+            print(f"Current memory power: {power:.2f} W") # 15.2 W
+            ```
+
         """
         try:
             pid = os.getpid()

@@ -1,9 +1,9 @@
-from processing_unit import ProcessingUnit
-from cpu_type import CpuType
-from os_type import OsType
-from identify_hardware_manufacturer_exception import IdentifyHardwareManufacturerException
-from hardware_name_identify_exception import HardwareNameIdentifyException
-from hardware_type import HardwareType as HT
+from .processing_unit import ProcessingUnit
+from .cpu_type import CpuType
+from .os_type import OsType
+from .identify_hardware_manufacturer_exception import IdentifyHardwareManufacturerException
+from .hardware_name_identify_exception import HardwareNameIdentifyException
+from .hardware_type import HardwareType as HT
 
 import os
 import cpuinfo
@@ -46,7 +46,19 @@ class Cpu(ProcessingUnit):
         """ The hardware manufacturer.
 
         Returns:
-            GpuType: A type of CPU.
+            CpuType: A type of CPU.
+
+        Example:
+            ```python
+
+            from monitor import Monitor
+
+            monitor = Monitor({'cpu': True})
+
+            components = monitor.get_monitored_components()
+            print(components['cpu']['component'].get_manufacturer) #CpuType.INTEL
+
+            ```
         """
         return self.__manufacturer
 
@@ -145,7 +157,7 @@ class Cpu(ProcessingUnit):
             return self.__get_power_on_linux()
     
     def __get_power_on_linux(self) -> float:
-        """" Returns the value of the CPU power in W in Linux.
+        """ Returns the value of the CPU power in W in Linux.
 
         Returns:
             float: CPU power.
@@ -171,7 +183,7 @@ class Cpu(ProcessingUnit):
         return power
 
     def __get_power_on_windows(self) -> float:
-        """" Returns the value of the CPU power in W in Windows.
+        """ Returns the value of the CPU power in W in Windows.
 
         Returns:
             float: CPU power.
@@ -189,10 +201,20 @@ class Cpu(ProcessingUnit):
         return power
 
     def get_cpu_percent_for_process(self) -> float:
-        """" Returns the percentage value of the monitored process on the CPU.
+        """ Returns the percentage value of the monitored process on the CPU.
 
         Returns:
             float: CPU percent.
+
+        Example:
+            ```python
+
+            from monitor import Monitor
+
+            monitor = Monitor({'cpu': True})
+            components = monitor.get_monitored_components()
+            print(components['cpu']['component'].get_cpu_percent_for_process()) # 0.37
+            ```
         """
         script_pid = os.getpid()
         sum_all = 0

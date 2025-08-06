@@ -1,10 +1,10 @@
-from processing_unit import ProcessingUnit
-from gpu_type import GpuType
-from os_type import OsType
-from identify_hardware_manufacturer_exception import IdentifyHardwareManufacturerException
-from hardware_name_identify_exception import HardwareNameIdentifyException
-from resource_unavailable_exception import ResourceUnavailableException
-from hardware_type import HardwareType as HT
+from .processing_unit import ProcessingUnit
+from .gpu_type import GpuType
+from .os_type import OsType
+from .identify_hardware_manufacturer_exception import IdentifyHardwareManufacturerException
+from .hardware_name_identify_exception import HardwareNameIdentifyException
+from .resource_unavailable_exception import ResourceUnavailableException
+from .hardware_type import HardwareType as HT
 
 import time
 import subprocess
@@ -43,11 +43,23 @@ class Gpu(ProcessingUnit):
 
         Returns:
             GpuType: A type of GPU.
+
+        Example:
+            ```python
+
+            from monitor import Monitor
+
+            monitor = Monitor({'gpu': True})
+
+            components = monitor.get_monitored_components()
+            print(components['gpu']['component'].get_manufacturer) #GpuType.NVIDIA
+
+            ```
         """
         return self.__manufacturer
     
     def __is_there_dedicated_gpu_windows(self) -> bool:
-        """" Check if it is a dedicated gpu in Windows OS.
+        """ Check if it is a dedicated gpu in Windows OS.
 
         Returns:
             bool: 
@@ -179,7 +191,7 @@ class Gpu(ProcessingUnit):
                 return self.__get_amd_power_on_linux()
 
     def __get_power_on_windows(self) -> float:
-        """" Returns the value of the GPU power in W in Windows.
+        """ Returns the value of the GPU power in W in Windows.
 
         Returns:
             float: GPU power.
@@ -194,7 +206,7 @@ class Gpu(ProcessingUnit):
         return power.Value
 
     def __is_there_nvidia_on_linux(self) -> bool:
-        """" Check if the GPU present in linux is NVIDIA.
+        """ Check if the GPU present in linux is NVIDIA.
 
         Returns:
             bool: 
@@ -208,7 +220,7 @@ class Gpu(ProcessingUnit):
             return False
     
     def __get_nvidia_power_on_linux(self) -> float:
-        """" Returns the value of the NVIDIA GPU power in W in Linux.
+        """ Returns the value of the NVIDIA GPU power in W in Linux.
 
         Returns:
             float: GPU power.
@@ -226,7 +238,7 @@ class Gpu(ProcessingUnit):
             return 0.0
     
     def __is_there_amd_on_linux(self) -> bool:
-        """" Check if the GPU present in Linux is AMD.
+        """ Check if the GPU present in Linux is AMD.
 
         Returns:
             bool: 
@@ -248,7 +260,7 @@ class Gpu(ProcessingUnit):
             raise Exception(f'Error checking for AMD graphics card:{e}')   
     
     def __get_amd_power_on_linux(self) -> float:
-        """" Returns the value of the AMD GPU power in W in Linux.
+        """ Returns the value of the AMD GPU power in W in Linux.
 
         Returns:
             float: GPU power.

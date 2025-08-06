@@ -1,5 +1,5 @@
-from hardware_component import HardwareComponent
-from os_type import OsType
+from .hardware_component import HardwareComponent
+from .os_type import OsType
 
 import clr
 import os

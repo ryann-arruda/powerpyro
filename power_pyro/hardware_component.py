@@ -1,4 +1,4 @@
-from os_type import OsType
+from .os_type import OsType
 
 from abc import ABC, abstractmethod
 

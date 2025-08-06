@@ -1,4 +1,4 @@
-from hardware_type import HardwareType
+from .hardware_type import HardwareType
 
 class IdentifyHardwareManufacturerException(Exception):
     """Exception raised when the hardware manufacturer cannot be identified.
