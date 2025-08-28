@@ -270,6 +270,9 @@ class Monitor():
         """
         self.__thread.start()
     
+    def is_running(self) -> bool:
+        return self.__thread.is_alive()
+    
     def end(self) -> None:
         """
         Stops the monitoring process and waits for the monitoring thread to finish.
