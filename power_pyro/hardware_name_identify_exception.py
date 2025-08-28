@@ -1,4 +1,4 @@
-from hardware_type import HardwareType
+from .hardware_type import HardwareType
 
 class HardwareNameIdentifyException(Exception):
     """Exception raised when the hardware name cannot be identified.

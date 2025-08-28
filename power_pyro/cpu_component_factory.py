@@ -1,9 +1,9 @@
-from hardware_component_factory import HardwareComponentFactory
-from os_type import OsType
-from hardware_component import HardwareComponent
-from cpu import Cpu
-from identify_hardware_manufacturer_exception import IdentifyHardwareManufacturerException
-from object_creation_exception import ObjectCreationException
+from .hardware_component_factory import HardwareComponentFactory
+from .os_type import OsType
+from .hardware_component import HardwareComponent
+from .cpu import Cpu
+from .identify_hardware_manufacturer_exception import IdentifyHardwareManufacturerException
+from .object_creation_exception import ObjectCreationException
 
 class CpuComponentFactory(HardwareComponentFactory):
     """Factory class for creating CPU components.

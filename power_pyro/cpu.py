@@ -1,9 +1,9 @@
-from processing_unit import ProcessingUnit
-from cpu_type import CpuType
-from os_type import OsType
-from identify_hardware_manufacturer_exception import IdentifyHardwareManufacturerException
-from hardware_name_identify_exception import HardwareNameIdentifyException
-from hardware_type import HardwareType as HT
+from .processing_unit import ProcessingUnit
+from .cpu_type import CpuType
+from .os_type import OsType
+from .identify_hardware_manufacturer_exception import IdentifyHardwareManufacturerException
+from .hardware_name_identify_exception import HardwareNameIdentifyException
+from .hardware_type import HardwareType as HT
 
 import os
 import cpuinfo
@@ -202,6 +202,7 @@ class Cpu(ProcessingUnit):
                 with process.oneshot():
                     process_pid = process.pid
                     process_cpu_percent = process.cpu_percent()
+                    print(type(process))
 
                     if process_pid:
                         sum_all += process_cpu_percent

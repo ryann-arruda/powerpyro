@@ -1,10 +1,10 @@
-from processing_unit import ProcessingUnit
-from gpu_type import GpuType
-from os_type import OsType
-from identify_hardware_manufacturer_exception import IdentifyHardwareManufacturerException
-from hardware_name_identify_exception import HardwareNameIdentifyException
-from resource_unavailable_exception import ResourceUnavailableException
-from hardware_type import HardwareType as HT
+from .processing_unit import ProcessingUnit
+from .gpu_type import GpuType
+from .os_type import OsType
+from .identify_hardware_manufacturer_exception import IdentifyHardwareManufacturerException
+from .hardware_name_identify_exception import HardwareNameIdentifyException
+from .resource_unavailable_exception import ResourceUnavailableException
+from .hardware_type import HardwareType as HT
 
 import time
 import subprocess

@@ -1,5 +1,5 @@
-from hardware_component import HardwareComponent
-from os_type import OsType
+from .hardware_component import HardwareComponent
+from .os_type import OsType
 
 import clr
 import os
@@ -10,8 +10,7 @@ if TYPE_CHECKING:
     from LibreHardwareMonitor.Hardware import Computer
 
 if os.name == 'nt':
-
-    #clr.AddReference(r"C:\Users\Alexa\OneDrive\Área de Trabalho\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
+    print(os.getcwd())
     clr.AddReference(r"C:\LibreHardwareMonitor\LibreHardwareMonitorLib.dll")
     from LibreHardwareMonitor.Hardware import Computer
 
@@ -68,6 +67,7 @@ class ProcessingUnit(HardwareComponent):
     def close(self) -> None:
         """Closes the computer monitoring instance."""
         if self.operating_system == OsType.WINDOWS:
+            print(self.__computer)
             self.__computer.Close()
     
     @abstractmethod

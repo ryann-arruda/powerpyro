@@ -1,3 +1,3 @@
-from sensor import Monitor
+from .monitor import Monitor
 
 __all__ = ['Monitor']
