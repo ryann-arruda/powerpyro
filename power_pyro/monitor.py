@@ -271,6 +271,25 @@ class Monitor():
         self.__thread.start()
     
     def is_running(self) -> bool:
+        """
+        Checks if the monitoring process is currently running.
+
+        Returns:
+            bool: True if the monitoring thread is alive (running), False otherwise.
+
+        Example:
+            Verify if the monitoring process is still running:
+
+            ```python
+            from power_pyro import Monitor
+
+            monitor = Monitor({'cpu': True, 'gpu': False, 'memory': True})
+            monitor.start()
+            print(monitor.is_running())  # True, since monitoring has started
+            monitor.end()
+            print(monitor.is_running())  # False, since monitoring has ended
+            ```
+        """
         return self.__thread.is_alive()
     
     def end(self) -> None:
