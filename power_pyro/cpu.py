@@ -224,7 +224,6 @@ class Cpu(ProcessingUnit):
                 with process.oneshot():
                     process_pid = process.pid
                     process_cpu_percent = process.cpu_percent()
-                    print(type(process))
 
                     if process_pid:
                         sum_all += process_cpu_percent
