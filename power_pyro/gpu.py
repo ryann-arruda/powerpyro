@@ -141,7 +141,7 @@ class Gpu(ProcessingUnit):
         if self.operating_system == OsType.WINDOWS:
             self.__update_hardware_name_windows()
         elif self.operating_system == OsType.LINUX:
-            self.__update_hardware_name_linux
+            self.__update_hardware_name_linux()
         else:
             raise OSError("Unable to identify operating system")
     
