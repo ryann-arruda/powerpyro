@@ -157,10 +157,11 @@ class Monitor():
         components: Dict[str, HardwareComponent] = {}
         
         for component in required_components:
-            components[component] = factories[component].create_component(self.__operating_system)
-
-            if hasattr(components[component], 'open'):
-                components[component].open()
+            if required_components[component]:
+                components[component] = factories[component].create_component(self.__operating_system)
+    
+                if hasattr(components[component], 'open'):
+                    components[component].open()
         
         return components
     
